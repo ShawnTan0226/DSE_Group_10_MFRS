@@ -16,6 +16,10 @@ class Plane:
         self.V=V
         self.h=h
 
+        self.MAC_list=np.array([])
+        self.x_list=np.array([])
+        self.y_list = np.array([])
+
         self.draw()
         self.MAC_aircraft()
         self.define_airfoil(airfoil)
@@ -23,12 +27,16 @@ class Plane:
 
     def help(self):
         print('Visual of top view of plane with plot_plane() \n ',
-              'Get the xflr inputs with xflrvelues() \n ',
+              'Get the xflr inputs with xflrvalues() \n ',
               'Plot plane with payload area with drawbox(opacity) \n ',
               'Plot plane with tail area with drawtail(opacity) \n ',
               'Get the MAC and x_quarter with MAC_aircraft() \n ',
               'Get the C_D_0 with define_C_D_0(laminar_frac) \n ',)
 
+
+
+
+    ### WING GEOMETRY ###
     def draw(self):
         self.offset=np.array([0])
         count=0
@@ -39,8 +47,12 @@ class Plane:
             self.offset=np.concatenate((self.offset, [nextoffset]))
             self.S_list=np.concatenate((self.S_list,[(self.c[-1]+self.c[-2])/2*(self.b[count+1]-self.b[count])]))
             count+=1
+
         
         self.S=np.sum(self.S_list)
+        self.A = self.b[-1]**2/self.S
+        self.A_list = (self.b[1:]-self.b[:-1])**2/self.S_list
+
         self.coords_bot=self.offset+self.c
         self.coords=np.concatenate((self.coords,self.offset,self.coords_bot[::-1]))
         self.coords=np.concatenate((self.coords,self.coords[::-1]))
@@ -111,9 +123,6 @@ class Plane:
         return y, off_x, off_y
 
     def listgenerator(self):
-        self.MAC_list=np.array([])
-        self.x_list=np.array([])
-        self.y_list = np.array([])
         for i in range(len(self.taper)):
             part= self.MAC_part(self.c[i],self.c[i+1],self.sweep[i],self.b[i+1]-self.b[i])
             self.MAC_list=np.concatenate((self.MAC_list,[part[0]]))
@@ -181,7 +190,11 @@ class Plane:
         self.max_thickness = np.max(thickness)
         self.max_thickness_location = np.argmax(thickness)*0.001
         return Area
-    
+
+
+
+
+    ### ISA CALCULATIONS ###
     def atmos(self):
         self.T=288.15-0.0065*self.h
         self.rho=1.225*(self.T/288.15)**(-1+9.81/(287.058*0.0065))
@@ -193,7 +206,12 @@ class Plane:
         self.Re_list=self.rho*self.V*self.MAC_list/self.nu
         self.a=np.sqrt(1.4*287.058*self.T)
         self.M=self.V/self.a
-    
+
+
+
+
+
+    ### AERODYNAMIC COEFFICIENT ###
     def define_C_f(self,laminar_frac,part):
         C_f_laminar=1.328/np.sqrt(self.Re_list[part])
         C_f_turbulent=0.455/((np.log10(self.Re_list[part]))**2.58*(1+0.144*self.M**2))
@@ -217,10 +235,15 @@ class Plane:
         self.C_D_0+=0.1*self.C_D_0
         return self.C_D_0
 
-    
+    def Cm0(self):
+        self.deltaCm0epsilon = -0.06
+        self.epsilon = 3 #radians
+        self.CmO_root = -0.6
+        self.CmO_tip = -0.6
+        self.Cmac = ((self.A*(np.cos(self.sweep)**2))/(self.A+2*np.cos(self.sweep)))*(self.CmO_root+self.CmO_tip)/2+
 
-
-test=Plane(5.8,[0.267,0.34],[38,38],[22,25])
+taper_list = [0.267,0.34]
+test=Plane(5.8,taper_list,[38,38],[22,25])
 print(test.S)
 test.plot_plane()
 test.xflrvelues()

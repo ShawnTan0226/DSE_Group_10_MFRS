@@ -3,17 +3,26 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 
+# Twist, dCmdEps, CmO_airfoil should be structured as follows
+# Twist = [0, twist of 1st part, twist of 2nd part, ...]
+# dCmdEps = [0, dCmdEps of 1st part, dCmdEps of 2nd part, ...] Source: Roskam 6
+# CmO_airfoil = [[CmO_tip, Cm0_root] for 1st part, [CmO_tip, Cm0_root] for 2nd part, ...] Source: Roskam 6
 class AerodynamicProperties:
-    def __init__(self,planegeometry,h=5000,V=110):
+    def __init__(self,plane,h=5000,V=110, dCmdEps, twist, CmO_airfoil):
         self.h=h
         self.V=V
-        self.plane=planegeometry
+        self.plane=plane
+
+        self.dCmdEps = dCmdEps
+        self.twist = twist
+        self.CmO_airfoil = CmO_airfoil
+
 
     ### ISA CALCULATIONS ###
     def atmos(self):
         self.T = 288.15 - 0.0065 * self.h
         self.rho = 1.225 * (self.T / 288.15) ** (-1 + 9.81 / (287.058 * 0.0065))
-        self.nu = 0.0000169
+        self.nu = 0.0000169 #Must be changed manually
 
     def aerodynamic_properties(self):
         self.atmos()
@@ -29,7 +38,7 @@ class AerodynamicProperties:
         C_f_total = laminar_frac * C_f_laminar + (1 - laminar_frac) * C_f_turbulent
         print('C_f_total', C_f_total)
         return C_f_total
-    
+
     def define_C_D_part_wing(self, laminar_frac, part):
         # modern blended winglet IF= 1-1.01, so IF can be neglected
         C_f = self.define_C_f(laminar_frac, part)
@@ -39,18 +48,18 @@ class AerodynamicProperties:
         S_wet = 2 * self.plane.S_list[part] * 1.07
         C_D_part = FF * C_f * S_wet / self.plane.S
         return C_D_part
-    
+
     def define_C_D_0(self, laminar_frac):
         self.C_D_0 = 0
         for i in range(len(self.plane.taper)):
             self.C_D_0 += self.define_C_D_part_wing(laminar_frac, i)
         self.C_D_0 += 0.1 * self.C_D_0
         return self.C_D_0
-    
+
     def Cm0(self):
         self.deltaCm0epsilon = -0.06
         self.epsilon = 3  # radians
         self.CmO_root = -0.6
         self.CmO_tip = -0.6
-        self.Cmac = ((self.A * (np.cos(self.sweep) ** 2)) / (self.A + 2 * np.cos(self.sweep))) * (
-                    self.CmO_root + self.CmO_tip) / 2 +
+        self.Cmac = ((self.plane.A * (np.cos(self.plane.sweep) ** 2)) / (self.plane.A + 2 * np.cos(self.plane.sweep))) * (
+                    self.CmO_root + self.CmO_tip) / 2 + dCmOdEps*twist

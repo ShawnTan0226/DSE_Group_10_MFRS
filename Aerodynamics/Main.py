@@ -20,11 +20,11 @@ from BatterySize import Planform_calculation
 
 
 test=Plane(9.72,[0.3,0.267],[38,38],[8.82,22])
+print(test.COG())
 # # test.plot_plane()
 # test.xflrvelues()
 # # test.drawbox(0.5)
 # test.drawtail(0.2)
 # print(test.MAC_aircraft())
 
-print(f"a= {test.c}")
-print(test.determine_CoG(engine_cg=0.85, battery_cg=0.27, payload_cg=0.27))
+

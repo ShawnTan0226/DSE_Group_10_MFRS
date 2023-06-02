@@ -48,11 +48,11 @@ class Plane:
             self.S_list=np.concatenate((self.S_list,[(self.c[-1]+self.c[-2])/2*(self.b[count+1]-self.b[count])]))
             count+=1
 
-        print(self.S_list)
         self.S=np.sum(self.S_list)
         self.A = self.b[-1]**2/self.S
         self.A_list = (self.b[1:]-self.b[:-1])**2/self.S_list
-
+        print("A_list",self.A_list)
+        print("sweep", self.sweep)
         self.coords_bot=self.offset+self.c
         self.coords=np.concatenate((self.coords,self.offset,self.coords_bot[::-1]))
         self.coords=np.concatenate((self.coords,self.coords[::-1]))

@@ -193,10 +193,40 @@ class Plane:
         self.max_thickness_location = np.argmax(thickness)*0.001
         return Area
 
-taper_list = [0.267,0.34]
-test=Plane(5.8,taper_list,[38,38],[22,25])
-print(test.S)
-test.plot_plane()
-test.xflrvelues()
-# test.drawbox(0.5)
-test.drawtail(0.2)
+
+    def COG(self):
+        print(1, self.sweep)
+        print(2, self.c)
+        print(3, self.b)
+        """Steps:
+        1. Partition wing into sections with each section having the corresponding c
+        2. Add weights to body and wing section
+        3. Set up equation (include the offset already for the x of each section)"""
+        sweep_cg_body = (np.arctan((np.tan(self.sweep[0])* 0.5 * self.b[1] + 0.1 * self.c[1] - 0.1 * self.c[0]) / (0.5 * self.b[1])))
+        print(22, np.rad2deg(sweep_cg_body))
+        print(111, np.rad2deg((np.arctan((np.tan(self.sweep[0])* 0.5 * self.b[2] + 0.1 * self.c[2] - 0.1 * self.c[0]) / (0.5 * self.b[2])))))
+
+        # sweep_cg_body = np.arctan((np.tan(self.sweep[0]) * 0.5 * self.b[1] + 0.1 * self.c[1] - 0.1 * self.c[0]) / (0.5 * self.b[1]))   #sweep at 0.35 for body
+        # sweep_cg_wing = np.arctan((np.tan(self.sweep[1]) * (0.5 * self.b[2] - 0.5 * self.b[1]) + 0.1 * self.c[2] - 0.1 * self.c[1]) / (0.5 * self.b[2] - 0.5 * self.b[1]))   #sweep at 0.35 for body                                              #sweep at 0.35 for body
+
+
+        #Step1
+        chord_body_section = np.linspace(self.c[0], self.c[1], 100)
+        chord_wing_sections = np.linspace(self.c[1], self.c[2], 100)
+
+        #Step2
+        x_body = 0.35 * chord_body_section
+
+
+
+
+
+
+
+# taper_list = [0.267,0.34]
+# test=Plane(5.8,taper_list,[38,38],[22,25])
+# print(test.S)
+# test.plot_plane()
+# test.xflrvelues()
+# # test.drawbox(0.5)
+# test.drawtail(0.2)

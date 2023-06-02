@@ -103,6 +103,8 @@ class Wingmodelling:
         
         '''
         The commented part is the calculation with the differentiation of Gamma dGdy
+        I made it so that I take a point very close to y with offset of +-0.0001 to avoid singularity and assumed dGdy is constant between these 2 points
+        For the one with discrete dG this isn't required, I just didn't take point y itself
         '''
         tempdGdy=np.copy(self.dGdy)
         tempy=np.copy(self.y)
@@ -162,6 +164,9 @@ class Wingmodelling:
 
             #Differentiation of Gamma
             self.dGdy=self.differentiation(self.Gamma,self.y)
+            # plt.plot(self.y,self.dGdy, '-o', markevery=1)
+            # plt.plot(self.y,self.Gamma)
+            # plt.show()
 
             self.integ=1
 
@@ -175,7 +180,7 @@ class Wingmodelling:
                 self.integ=i
 
             #Calculate true angle of attack
-            ai[ai<0]=0
+            # ai[ai<0]=0
             self.aoa=self.geomaoa-ai  
             # Main problem is here as ai goes to negative infinity at the tips(-b/2 and b/2). 
             # Excluding the tips does not work as the points before the tips still have large negative values at the points near the tips
@@ -191,17 +196,17 @@ class Wingmodelling:
             '''
             Error of induced angle of attack
             '''
-            error=np.mean(np.abs(aiold-ai))
-            # print(ai-aiold)
+            error=np.sum(np.abs(aiold-ai))
+            print(error)
             aiold=np.copy(ai)
 
             #Calculate new circulation distribution with relaxation
             self.Gammanew=self.cl*self.c*0.5*self.V
             self.Gammanew[0],self.Gammanew[-1]=0,0
-            self.Gamma+=0.05*(self.Gammanew-self.Gamma)
+            self.Gamma+=0.01*(self.Gammanew-self.Gamma)
 
-            # plt.plot(self.y,self.Gamma)
-            plt.plot(self.y,ai)
+            plt.plot(self.y,self.Gamma)
+            # plt.plot(self.y,ai)
             plt.show()
             
             self.count+=1

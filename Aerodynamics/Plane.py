@@ -23,7 +23,7 @@ class Plane:
         self.draw()
         self.MAC_aircraft()
         self.define_airfoil(airfoil)
-        self.aerodynamic_properties()
+        # self.aerodynamic_properties()
 
     def help(self):
         print('Visual of top view of plane with plot_plane() \n ',
@@ -192,7 +192,7 @@ class Plane:
         return Area
 
 
-    def COG_wing(self):
+    def COG(self, pylon_cg, lg_cg, vertical_tail_cg, engine_mass, engine_cg, battery_mass, battery_cg, payload_mass, payload_cg, system_mass, system_cg, MTOW=19900):
         """Steps cog wing structure :
         1. Partition wing into sections with each section having the corresponding c
         2. Add weights to body and wing section
@@ -218,7 +218,50 @@ class Plane:
         wing_cg = (2*body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) + 2 * np.trapz(chord_body_section**2, chord_y_body))
 
         #---------------------------------
-        return wing_cg
+        total_length = 0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]
+        #------------LITERATURE-----
+        total_structural_mass = 0.26 * MTOW
+
+        wing_mf = 0.290
+        # wing_cg = 0.525
+        wing_cg_relative = wing_cg / total_length
+        wing_mass = wing_mf * total_structural_mass
+
+        body_mf = 0.544
+        body_cg = 0.375
+        body_mass = body_mf * total_structural_mass
+
+        pylon_mf = 0.035
+        # pylon_cg = 0.85 #VARIABLE
+        pylon_mass = pylon_mf * total_structural_mass #May be Variable
+
+        lg_mf = 0.108
+        # lg_cg = 0.65 #VARIABLE
+        lg_mass = lg_mf * total_structural_mass #may be VARIABLE
+
+        vertical_tail_mf = 0.024
+        # vertical_tail_cg = 0.875 #VARIABLE
+        vertical_tail_mass = vertical_tail_mf * total_structural_mass #may be variable
+
+        # engine_mass = 1244.168
+        # engine_cg = 0.85
+
+        # battery_mass = 10600.13 #battery for drone
+        # battery_cg = 0.2814
+
+        # payload_mass = 2903.2 #battery for ac
+        # payload_cg = 0.2814
+
+        # system_mass = ??
+        # system_cg = 0.2814
+
+        total_relative_cg = (wing_mass * wing_cg_relative + body_mass * body_cg + pylon_mass * pylon_cg + lg_mass*lg_cg +
+            vertical_tail_mass * vertical_tail_cg + engine_mass*engine_cg + battery_mass * engine_cg +
+            payload_mass*payload_cg + system_mass * system_cg) / (MTOW)
+
+        total_cg = total_relative_cg * total_length
+        print(total_relative_cg)
+        print(total_cg)
 
 
 

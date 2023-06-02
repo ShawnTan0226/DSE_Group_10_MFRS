@@ -23,7 +23,7 @@ class Plane:
         self.draw()
         self.MAC_aircraft()
         self.define_airfoil(airfoil)
-
+        self.aerodynamic_properties()
 
     def help(self):
         print('Visual of top view of plane with plot_plane() \n ',
@@ -48,7 +48,7 @@ class Plane:
             self.S_list=np.concatenate((self.S_list,[(self.c[-1]+self.c[-2])/2*(self.b[count+1]-self.b[count])]))
             count+=1
 
-        print(self.S_list)
+        
         self.S=np.sum(self.S_list)
         self.A = self.b[-1]**2/self.S
         self.A_list = (self.b[1:]-self.b[:-1])**2/self.S_list
@@ -131,8 +131,6 @@ class Plane:
 
     def MAC_aircraft(self):#Make sure to use numpy array
         self.listgenerator()
-        print(self.MAC_list)
-        print(self.S_list)
         self.MAC = np.sum(self.MAC_list*self.S_list)/np.sum(self.S_list)
         self.x_quarter = np.sum(self.x_list*self.S_list)/np.sum(self.S_list)
         self.y_quarter = np.sum(self.y_list*self.S_list)/np.sum(self.S_list)

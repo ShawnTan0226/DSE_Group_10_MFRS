@@ -194,30 +194,33 @@ class Plane:
         return Area
 
 
-    def COG(self):
-        print(1, self.sweep)
-        print(2, self.c)
-        print(3, self.b)
-        """Steps:
+    def COG_wing(self):
+        """Steps cog wing structure :
         1. Partition wing into sections with each section having the corresponding c
         2. Add weights to body and wing section
         3. Set up equation (include the offset already for the x of each section)"""
-        sweep_cg_body = (np.arctan((np.tan(self.sweep[0])* 0.5 * self.b[1] + 0.1 * self.c[1] - 0.1 * self.c[0]) / (0.5 * self.b[1])))
-        print(22, np.rad2deg(sweep_cg_body))
-        print(111, np.rad2deg((np.arctan((np.tan(self.sweep[0])* 0.5 * self.b[2] + 0.1 * self.c[2] - 0.1 * self.c[0]) / (0.5 * self.b[2])))))
-
-        # sweep_cg_body = np.arctan((np.tan(self.sweep[0]) * 0.5 * self.b[1] + 0.1 * self.c[1] - 0.1 * self.c[0]) / (0.5 * self.b[1]))   #sweep at 0.35 for body
-        # sweep_cg_wing = np.arctan((np.tan(self.sweep[1]) * (0.5 * self.b[2] - 0.5 * self.b[1]) + 0.1 * self.c[2] - 0.1 * self.c[1]) / (0.5 * self.b[2] - 0.5 * self.b[1]))   #sweep at 0.35 for body                                              #sweep at 0.35 for body
-
-
         #Step1
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
+        chord_y_body = np.linspace(0, self.b[1]/2, 100)
+
         chord_wing_sections = np.linspace(self.c[1], self.c[2], 100)
+        chord_y_wing = np.linspace(0, self.b[2]/2 - self.b[1]/2, 100)
 
-        #Step2
-        x_body = 0.35 * chord_body_section
+        #Step2 (estimates x according to sweep)
+        x_body = 0.25 * self.c[0] + np.tan(self.sweep[0]) * chord_y_body + 0.1 * chord_body_section
+        x_wing = (0.25 * self.c[0] + np.tan(self.sweep[1]) * self.b[1]/2) + np.tan(self.sweep[1]) * chord_y_wing + 0.1 * chord_wing_sections
 
+        body_integrand = x_body * chord_body_section**2
+        body_integration = np.trapz(body_integrand, chord_y_body)
 
+        wing_integrand = x_wing * chord_wing_sections**2
+        wing_integration = np.trapz(wing_integrand, chord_y_wing)
+
+        #step 3
+        wing_cg = (2*body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) + 2 * np.trapz(chord_body_section**2, chord_y_body))
+
+        #---------------------------------
+        return wing_cg
 
 
 

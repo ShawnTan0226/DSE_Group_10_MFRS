@@ -116,7 +116,7 @@ class Plane:
         
     def MAC_part(self,cr, ct, sweep, b):
         #MAC
-        y = 2/3 * (cr + ct - (cr*ct)/(cr+ct))
+        y = 2/3 * (cr + ct + ct**2/cr)/(1+ct/cr)
         #offset from that parts root on quarter chord
         off_y = -(b/2)*(y-cr)/(cr-ct) #b is the span of that part of the wing
         off_x = off_y*np.tan(sweep)

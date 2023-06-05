@@ -198,10 +198,10 @@ class Plane:
         return Area
 
 
-    def COG(self, pylon_cg, lg_cg, vertical_tail_cg, engine_mass, engine_cg, battery_mass, battery_cg, payload_mass, payload_cg, system_mass, system_cg, MTOW=19900):
+    def calculate_COG(self, pylon_cg, lg_cg, vertical_tail_cg, engine_mass, engine_cg, battery_mass, battery_cg, payload_mass, payload_cg, system_mass, system_cg, MTOW=19900):
         """Steps to determine cog wing structure :
         1. Partition wing into sections with each section having the corresponding c
-        2. Add weights to body and wing section
+        2. Estimate x according to sweep (determine offset)
         3. Set up equation (include the offset (due to sweep) already for the x of each section)"""
         #Step1
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
@@ -221,27 +221,19 @@ class Plane:
         wing_integration = np.trapz(wing_integrand, chord_y_wing)
 
         #step 3
-        wing_cg = (2*body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) + 2 * np.trapz(chord_body_section**2, chord_y_body))
+        body_wing_cg = (2*body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) + 2 * np.trapz(chord_body_section**2, chord_y_body))
         """"----------------wing structure section---------------------"""
 
 
         #----------------total length of drone according to sweep----------
-        total_length = 0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]
+        total_length = max((0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]), self.c[0])
 
-        #-----------COG DETERMINATION with all other subsystems-----
+        #-----------COG DETERMINATION with all other subsystems------------------------------
         total_structural_mass = 0.26 * MTOW
 
-
         #Defining each subsystem
-        wing_mf = 0.290
-        # wing_cg = 0.525
-        wing_cg_relative = wing_cg / total_length
-        wing_mass = wing_mf * total_structural_mass
 
-        body_mf = 0.544
-        body_cg = 0.375
-        body_mass = body_mf * total_structural_mass
-
+        #--HERE: system structure is a part of body--
         pylon_mf = 0.035
         # pylon_cg = 0.85 #VARIABLE
         pylon_mass = pylon_mf * total_structural_mass #May be Variable
@@ -254,6 +246,11 @@ class Plane:
         # vertical_tail_cg = 0.875 #VARIABLE
         vertical_tail_mass = vertical_tail_mf * total_structural_mass #may be variable
 
+        #HERE: system mass is part of the bodywing mass
+        body_wing_mass = total_structural_mass - pylon_mass - lg_mass - vertical_tail_mass - system_mass
+        body_wing_cg_relative = body_wing_cg / total_length
+
+        #----------INPUT VARIABLES---------------
         # engine_mass = 1244.168
         # engine_cg = 0.85
 
@@ -265,17 +262,20 @@ class Plane:
 
         # system_mass = ??
         # system_cg = 0.2814
+        #---------------------------------------
 
         #COG EQUATION
-        total_relative_cg = (wing_mass * wing_cg_relative + body_mass * body_cg + pylon_mass * pylon_cg + lg_mass*lg_cg +
+        x_relative_cg = (body_wing_cg_relative * body_wing_mass + pylon_mass * pylon_cg + lg_mass*lg_cg +
             vertical_tail_mass * vertical_tail_cg + engine_mass*engine_cg + battery_mass * battery_cg +
             payload_mass*payload_cg + system_mass * system_cg) / (MTOW)
 
-        total_cg = total_relative_cg * total_length
-        print(f"cg_rel: {total_relative_cg}")
-        print(f"cg_abs: {total_cg}")
+        x_cg = x_relative_cg * total_length
 
-        return total_cg
+        self.x_cg = x_cg
+        self.x_relative_cg = x_relative_cg
+        self.length = total_length
+
+        return x_cg
 
 
 

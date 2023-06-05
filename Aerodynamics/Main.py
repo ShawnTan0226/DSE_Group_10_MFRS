@@ -27,7 +27,6 @@ print(f"x_cg: {plane.x_cg}, x_relative_cg: {plane.x_relative_cg}")
 print(f"total x_ac: {plane.x_quarter}, x_ac_rel: {plane.x_quarter/plane.length}")
 print(f"x_abs_dif: {plane.x_quarter - plane.x_cg}")
 
-print('x-list', plane.)
 
 print('MAC_eq',plane.MAC_eq)
 print('MAC_calc',plane.MAC)

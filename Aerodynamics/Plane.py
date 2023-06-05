@@ -63,6 +63,7 @@ class Plane:
     def plot_plane(self):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
+        plt.plot(np.concatenate((self.y_list,self.y_list[::-1])),np.concatenate((self.x_list,self.x_list[::-1]+self.MAC_list[::-1])),color='red')
         plt.gca().invert_yaxis()
         plt.show()
 

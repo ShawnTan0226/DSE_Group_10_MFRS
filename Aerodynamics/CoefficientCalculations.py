@@ -8,6 +8,7 @@ from Plane import Plane
 # Twist = [0, twist of 1st part, twist of 2nd part, ...]
 # dCmdEps = [0, dCmdEps of 1st part, dCmdEps of 2nd part, ...] Source: Roskam 6
 # CmO_airfoil = [[CmO_root, CmO_tip] for 1st part, [[CmO_root, CmO_tip] for 2nd part, ...] Source: Roskam 6
+#The horizontal stabiliser are at the wing tips and have a sweep of zero
 class AerodynamicProperties:
     def __init__(self,plane, dCmdEps, twist, CmO_airfoil, h=5000 ,V=110): #Altitude in ft
         self.h=h
@@ -132,8 +133,24 @@ class AerodynamicProperties:
     def C_n_r(self):
         self.C_n_r=0
 
+    #def Cmdot(self): #Make CLalpha_h equal to zero if there is no tail, tail is a straight conventional wing at wingtips
+    #    self.eta_h =
+    #    self.x_ac_h = self.plane.offset[-1]+ self.plane.c
+    #    self.Cmdot = -2*self.CLalpha_h * self.eta_h *(self.plane.offset[-1]+ self.C
+
+    def C_Y_beta_wing(self):
+        self.C_Y_b_w = -0.00573 * self.dihedral #dihedral in deg
+
+    def C_y_beta_vertical(self):
+        constant = 0.724 + 3.06((self.Sv/self.plane.S)/(1+np.cos()))
+        self.C_Y_b_v = -self.kv * self.CL_alpha_v #kv - Roskam 6 fig. 10.12
+
 '''Inputs'''
 #Aerodynamic coefficients
+
+
+
+
 dCmdEps = [0,0.4,0.4]
 twist = [0,0.1,0.1]
 CmO_airfoil = [[0.1,0.05],[0.2,0.1]] #Get from xfoil

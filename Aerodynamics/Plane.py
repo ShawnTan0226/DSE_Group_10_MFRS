@@ -58,12 +58,13 @@ class Plane:
         negative=np.concatenate((-self.b,-self.b[::-1]))[::-1]
 
 
-        self.bfull=np.concatenate((self.b,self.b[::-1],negative))
+        self.bfull=np.concatenate((self.b/2,self.b[::-1]/2,negative/2))
 
     def plot_plane(self):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
-        plt.plot(np.concatenate((self.y_list,self.y_list[::-1])),np.concatenate((self.x_list,self.x_list[::-1]+self.MAC_list[::-1])),color='red')
+        plt.plot(np.concatenate((self.y_list,self.y_list[::-1])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1])),color='red')
+        plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
         plt.gca().invert_yaxis()
         plt.show()
 
@@ -127,7 +128,7 @@ class Plane:
             part= self.MAC_part(self.c[i],self.c[i+1],self.sweep[i],self.b[i+1]-self.b[i])
             self.MAC_list=np.concatenate((self.MAC_list,[part[0]]))
             self.x_list=np.concatenate((self.x_list,[part[1]]+self.offset[i]+0.25*self.c[i]))
-            self.y_list = np.concatenate((self.y_list, [part[2]]+self.b[i]))
+            self.y_list = np.concatenate((self.y_list, [part[2]]+self.b[i]/2))
 
     def MAC_aircraft(self):#Make sure to use numpy array
         self.listgenerator()

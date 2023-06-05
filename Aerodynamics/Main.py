@@ -20,7 +20,8 @@ from BatterySize import Planform_calculation
 
 
 
-plane=Plane(9.72,[0.3,0.267],[50, 30],[8.82,22])
+plane=Plane(10,[0.4,0.5],[30, 30],[10,20])
+print(plane.y_quarter,plane.x_quarter,plane.MAC,plane.b,plane.MAC_list,plane.y_list)
 plane.plot_plane()
 plane.calculate_COG(pylon_cg=0.85, lg_cg=0.65, vertical_tail_cg=0.875, engine_mass=1224, engine_cg=0.85, battery_mass=10600, battery_cg=0.281, payload_mass=2903, payload_cg=0.281, system_mass=300, system_cg=0.281, MTOW=19900)
 print(f"x_cg: {plane.x_cg}, x_relative_cg: {plane.x_relative_cg}")

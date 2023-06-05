@@ -61,5 +61,5 @@ class AerodynamicProperties:
         self.epsilon = 3  # radians
         self.CmO_root = -0.6
         self.CmO_tip = -0.6
-        self.Cmac = ((self.plane.A * (np.cos(self.plane.sweep) ** 2)) / (self.plane.A + 2 * np.cos(self.plane.sweep))) * (
-                    self.CmO_root + self.CmO_tip) / 2 + dCmOdEps*twist
+        # self.Cmac = ((self.plane.A * (np.cos(self.plane.sweep) ** 2)) / (self.plane.A + 2 * np.cos(self.plane.sweep))) * (
+                    # self.CmO_root + self.CmO_tip) / 2 + dCmOdEps*twist

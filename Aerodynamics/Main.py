@@ -1,4 +1,5 @@
 from Plane import Plane
+from CoefficientCalculations as AerodynamicProperties
 from BatterySize import Planform_calculation
 
 # MakePlane = Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",19902,2409,7.5,0.25,0.4)

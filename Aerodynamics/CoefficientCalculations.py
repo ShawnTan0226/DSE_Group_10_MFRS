@@ -74,6 +74,64 @@ class AerodynamicProperties:
         self.CLdot=0
         self.CDdot=0
 
+    def C_Z_0(self):
+        self.C_Z_0=0
+
+    def C_X_0(self):
+        self.C_X_0=-self.C_l-self.T_c*(self.alpha0+self.ip)
+
+
+    #Speed derivatives
+    def C_X_u(self):
+        self.C_X_u=-3*self.C_D*(1-self.C_D_T_c)
+
+    def C_Z_u(self,ip):
+        self.C_Z_u=-2*self.C_L+self.C_D*(-(self.alpha0+ip)+3*self.C_D_T_c)
+
+    def C_m_u(self):
+        self.C_m_u=-3*self.C_D*self.C_m_T_c
+
+    #angle of attack derivatives
+    def C_X_alpha(self):
+        self.C_X_alpha=-self.C_L*(1-2*self.C_L_alpha/(self.pi*self.plane.A*self.e))
+
+    def C_Z_alpha(self,ip):
+        self.C_Z_alpha=-self.C_L_alpha-self.C_D
+
+    def C_m_alpha(self):
+        self.C_m_alpha=-self.C_L_alpha*(self.x_ac/self.MAC)
+
+    #pitch rate derivatives
+    def C_X_q(self):
+        self.C_X_q=0
+    
+    def C_Z_q(self):
+        self.C_Z_q=-self.C_L_alpha*(self.x_ac-self.x_cg)/(self.MAC)
+
+    def C_m_q(self):
+        self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2)
+
+    #Roll rate derivatives
+    def C_Y_p(self):
+        #Should this be neglected?
+        self.C_Y_p=0
+
+    def C_l_p(self):
+        self.C_l_p=0
+    
+    def C_n_p(self):
+        self.C_n_p=self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
+
+    #Yaw rate derivatives
+    def C_Y_r(self):
+        self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
+
+    def C_l_r(self):
+        self.C_l_r=0
+    
+    def C_n_r(self):
+        self.C_n_r=0
+
 '''Inputs'''
 #Aerodynamic coefficients
 dCmdEps = [0,0.4,0.4]

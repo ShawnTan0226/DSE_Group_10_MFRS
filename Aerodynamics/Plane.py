@@ -22,6 +22,7 @@ class Plane:
 
         self.draw()
         self.MAC_aircraft()
+        self.equivalent_wing()
         self.define_airfoil(airfoil)
         # self.aerodynamic_properties()
 
@@ -32,8 +33,6 @@ class Plane:
               'Plot plane with tail area with drawtail(opacity) \n ',
               'Get the MAC and x_quarter with MAC_aircraft() \n ',
               'Get the C_D_0 with define_C_D_0(laminar_frac) \n ',)
-
-
 
 
     ### WING GEOMETRY ###
@@ -132,10 +131,17 @@ class Plane:
     def MAC_aircraft(self):#Make sure to use numpy array
         self.listgenerator()
         self.MAC = np.sum(self.MAC_list*self.S_list)/np.sum(self.S_list)
-        self.x_quarter = np.sum(self.x_list*self.S_list)/np.sum(self.S_list)
+        self.x_quarter = np.sum(self.x_list*self.S_list)/np.sum(self.S_list) #X is from leading point
         self.y_quarter = np.sum(self.y_list*self.S_list)/np.sum(self.S_list)
 
-    
+    def equivalent_wing(self):
+        self.sweep_eq = np.arctan((self.x_list[1] - self.x_list[0])/(self.y_list[1]-self.y_list[0])) #rad
+        self.cr_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(-self.y_list[0])+self.MAC_list[0]
+        self.ct_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(self.b[2]-self.y_list[0])+self.MAC_list[0]
+        self.MAC_eq = self.MAC_part(self.cr_eq,self.ct_eq,self.sweep_eq,self.b[2])
+        self.S_eq = self.MAC_eq[0]*self.b[2]
+
+
     def define_airfoil(self,file_path):
         # Initialize empty arrays for positive and negative values
         positive_column1 = []

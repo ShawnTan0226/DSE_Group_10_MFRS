@@ -23,6 +23,11 @@ from BatterySize import Planform_calculation
 plane=Plane(9.72,[0.3,0.267],[10, 20],[8.82,22])
 print(f"ac_rel: {plane.x_quarter/11.7}, total ac: {plane.x_quarter}")
 print(plane.COG(pylon_cg=0.85, lg_cg=0.65, vertical_tail_cg=0.875, engine_mass=1244, engine_cg=0.85, battery_mass=10600, battery_cg=0.281, payload_mass=2903, payload_cg=0.281, system_mass=300, system_cg=0.281, MTOW=19900))
+print('MAC_eq',plane.MAC_eq)
+print('MAC_calc',plane.MAC)
+print('MAC_eq',plane.S)
+print('MAC_calc',plane.S_eq)
+
 # # test.plot_plane()
 # test.xflrvelues()
 # # test.drawbox(0.5)

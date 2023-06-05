@@ -139,7 +139,7 @@ class Plane:
         self.cr_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(-self.y_list[0])+self.MAC_list[0]
         self.ct_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(self.b[2]-self.y_list[0])+self.MAC_list[0]
         self.MAC_eq = self.MAC_part(self.cr_eq,self.ct_eq,self.sweep_eq,self.b[2])
-        self.S_eq = self.MAC_eq[0]*self.b[2]
+        self.S_eq = (self.cr_eq+self.ct_eq)/2*self.b[2]
 
 
     def define_airfoil(self,file_path):

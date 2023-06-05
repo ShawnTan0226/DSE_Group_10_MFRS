@@ -62,22 +62,23 @@ class AerodynamicProperties:
         return self.C_D_0
 
     def Cmac(self):
-        print(plane.A_list)
-        print(plane.sweep)
-        print(self.CmO_root_list)
-        print(self.CmO_tip_list)
-        print(self.twist[1:])
-        print(self.dCmdEps[1:])
+
         self.Cmac = ((self.plane.A_list * (np.cos(self.plane.sweep) ** 2)) /
                      (self.plane.A_list + 2 * np.cos(self.plane.sweep))) * (self.CmO_root_list + self.CmO_tip_list) / 2\
                     + self.dCmdEps[1:]*self.twist[1:]
         print("Cmac", self.Cmac)
 
+    ### DYNAMIC STABILITY COEFFICIENTS ###
+
+    def CLCDalphadot(self):
+        self.CLdot=0
+        self.CDdot=0
+
 '''Inputs'''
 #Aerodynamic coefficients
 dCmdEps = [0,0.4,0.4]
 twist = [0,0.1,0.1]
-CmO_airfoil = [[0.1,0.05],[0.2,0.1]]
+CmO_airfoil = [[0.1,0.05],[0.2,0.1]] #Get from xfoil
 plane=Plane(9.72,[0.3,0.267],[38,38],[8.82,22])
 coefficients = AerodynamicProperties(plane, dCmdEps, twist, CmO_airfoil)
 print(coefficients.Cmac())

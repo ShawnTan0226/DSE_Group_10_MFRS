@@ -193,10 +193,10 @@ class Plane:
 
 
     def COG(self, pylon_cg, lg_cg, vertical_tail_cg, engine_mass, engine_cg, battery_mass, battery_cg, payload_mass, payload_cg, system_mass, system_cg, MTOW=19900):
-        """Steps cog wing structure :
+        """Steps to determine cog wing structure :
         1. Partition wing into sections with each section having the corresponding c
         2. Add weights to body and wing section
-        3. Set up equation (include the offset already for the x of each section)"""
+        3. Set up equation (include the offset (due to sweep) already for the x of each section)"""
         #Step1
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
         chord_y_body = np.linspace(0, self.b[1]/2, 100)
@@ -216,12 +216,17 @@ class Plane:
 
         #step 3
         wing_cg = (2*body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) + 2 * np.trapz(chord_body_section**2, chord_y_body))
+        """"----------------wing structure section---------------------"""
 
-        #---------------------------------
+
+        #----------------total length of drone according to sweep----------
         total_length = 0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]
-        #------------LITERATURE-----
+
+        #-----------COG DETERMINATION with all other subsystems-----
         total_structural_mass = 0.26 * MTOW
 
+
+        #Defining each subsystem
         wing_mf = 0.290
         # wing_cg = 0.525
         wing_cg_relative = wing_cg / total_length
@@ -255,13 +260,17 @@ class Plane:
         # system_mass = ??
         # system_cg = 0.2814
 
+        #COG EQUATION
         total_relative_cg = (wing_mass * wing_cg_relative + body_mass * body_cg + pylon_mass * pylon_cg + lg_mass*lg_cg +
-            vertical_tail_mass * vertical_tail_cg + engine_mass*engine_cg + battery_mass * engine_cg +
+            vertical_tail_mass * vertical_tail_cg + engine_mass*engine_cg + battery_mass * battery_cg +
             payload_mass*payload_cg + system_mass * system_cg) / (MTOW)
 
         total_cg = total_relative_cg * total_length
-        print(total_relative_cg)
-        print(total_cg)
+        print(f"cg_rel: {total_relative_cg}")
+        print(f"cg_abs: {total_cg}")
+
+        return total_cg
+
 
 
 

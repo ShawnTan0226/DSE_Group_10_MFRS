@@ -118,8 +118,8 @@ class Plane:
         #MAC
         y = 2/3 * (cr + ct - (cr*ct)/(cr+ct))
         #offset from that parts root on quarter chord
-        off_x = -(b/2)*(y-cr)/(cr-ct) #b is the span of that part of the wing
-        off_y = np.tan(sweep)*off_x
+        off_y = -(b/2)*(y-cr)/(cr-ct) #b is the span of that part of the wing
+        off_x = off_y*np.tan(sweep)
         return y, off_x, off_y
 
     def listgenerator(self):

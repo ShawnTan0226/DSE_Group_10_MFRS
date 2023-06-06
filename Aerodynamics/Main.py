@@ -1,6 +1,6 @@
 from Plane import Plane
-from CoefficientCalculations import AerodynamicProperties
-from BatterySize import Planform_calculation
+# from CoefficientCalculations import AerodynamicProperties
+# from BatterySize import Planform_calculation
 
 # MakePlane = Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",19902,2409,7.5,0.25,0.4)
 # MakePlane.makeplane()
@@ -17,7 +17,6 @@ from BatterySize import Planform_calculation
 # MakePlane.plane.plot_plane()
 # print(MakePlane.plane.MAC)
 # print(MakePlane.plane.C_D_0)
-
 
 
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])

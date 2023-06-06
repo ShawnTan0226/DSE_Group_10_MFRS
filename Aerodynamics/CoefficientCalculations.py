@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d
@@ -23,6 +25,29 @@ class AerodynamicProperties:
         for i in range(len(CmO_airfoil)):
             self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
             self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
+
+        directory_path = "./Xflr dat"
+        file_list = []
+        data={}
+
+        for filename in os.listdir(directory_path):
+            file_list.append(filename)
+
+        for file in file_list:
+            filename=directory_path+'/'+file
+            df = pd.read_csv(filename,header=None)
+            df=np.array(df)
+            data[file[:4]]=df
+
+        self.data=data[self.plane.planename]
+        self.calc_C_L_alpha()
+
+    def calc_C_L_alpha(self):
+        start=np.where(self.data[:,0]==-5)[0][0]
+        end=np.where(self.data[:,0]==5)[0][0]
+        coeff = np.polyfit(self.data[start:end,0],self.data[start:end,2],1)
+        self.C_L_alpha=coeff[0]
+        return self.C_L_alpha
 
     ### ISA CALCULATIONS ###
     def atmos(self):
@@ -75,62 +100,67 @@ class AerodynamicProperties:
         self.CLdot=0
         self.CDdot=0
 
-    def C_Z_0(self):
+    def calc_C_Z_0(self):
         self.C_Z_0=0
 
-    def C_X_0(self):
+    def calc_C_X_0(self):
         self.C_X_0=-self.C_l-self.T_c*(self.alpha0+self.ip)
 
 
     #Speed derivatives
-    def C_X_u(self):
+    def calc_C_X_u(self):
         self.C_X_u=-3*self.C_D*(1-self.C_D_T_c)
 
-    def C_Z_u(self,ip):
+    def calc_C_Z_u(self,ip):
         self.C_Z_u=-2*self.C_L+self.C_D*(-(self.alpha0+ip)+3*self.C_D_T_c)
 
-    def C_m_u(self):
+    def calc_C_m_u(self):
         self.C_m_u=-3*self.C_D*self.C_m_T_c
 
     #angle of attack derivatives
-    def C_X_alpha(self):
+    def calc_C_X_alpha(self):
         self.C_X_alpha=-self.C_L*(1-2*self.C_L_alpha/(self.pi*self.plane.A*self.e))
 
-    def C_Z_alpha(self,ip):
+    def calc_C_Z_alpha(self):
         self.C_Z_alpha=-self.C_L_alpha-self.C_D
 
-    def C_m_alpha(self):
+    def calc_C_m_alpha(self):
         self.C_m_alpha=-self.C_L_alpha*(self.x_ac/self.MAC)
 
     #pitch rate derivatives
-    def C_X_q(self):
+    def calc_C_X_q(self):
         self.C_X_q=0
     
-    def C_Z_q(self):
+    def calc_C_Z_q(self):
         self.C_Z_q=-self.C_L_alpha*(self.x_ac-self.x_cg)/(self.MAC)
 
-    def C_m_q(self):
+    def calc_C_m_q(self):
         self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2)
 
     #Roll rate derivatives
-    def C_Y_p(self):
+    def calc_C_Y_p(self):
         #Should this be neglected?
-        self.C_Y_p=0
+        self.C_Y_p=(self.z_vcos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.plane.b_tot*self.C_Y_b_v
 
-    def C_l_p(self):
-        self.C_l_p=0
+    def calc_C_l_p(self):
+        y=np.arange(0,self.plane.b_tot/2,self.plane.b_tot/2000)
+        Delta_alpha=y
+        Delta_C_l=self.normalisedC_L*Delta_alpha
+        self.C_l_p=-2*np.trapz(Delta_C_l*y,y)
     
-    def C_n_p(self):
-        self.C_n_p=self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
+    def calc_C_n_p(self):
+        self.C_n_p_w=0
+        self.C_n_p_v=(self.l_v*np.cos(self.aoa) +self.z_v*np.sin(self.aoa))(self.z_vcos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.plane.b_tot*self.C_Y_b_v
+        self.C_n_p=self.C_n_p_w+self.C_n_p_v
 
     #Yaw rate derivatives
-    def C_Y_r(self):
+    def calc_C_Y_r(self):
         self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
 
-    def C_l_r(self):
+    def calc_C_l_r(self):
         self.C_l_r=0
     
-    def C_n_r(self):
+    def calc_C_n_r(self):
         self.C_n_r=0
 
     #def Cmdot(self): #Make CLalpha_h equal to zero if there is no tail, tail is a straight conventional wing at wingtips

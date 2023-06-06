@@ -4,7 +4,7 @@ import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 
 class Plane:
-    def __init__(self,Cri,taper,sweep,b,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat"):
+    def __init__(self,Cri,taper,sweep,b,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat"):
         #Plane object has n sections
         self.c=np.array([Cri]) #array of chord [m] form: [Middle c,c1,c2,c3,...,cn]
         self.taper = np.array(taper) #array of taper ratio form: [taper1,taper2,taper3,...,tapern]
@@ -12,9 +12,12 @@ class Plane:
         self.b = np.concatenate(([0],b)) #array of span [m] form: [0,b1,b2,b3,...,bn]
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
         
+        self.b_tot=self.b[-1] #total span [m]
         self.coords=np.array([]) 
         self.V=V
         self.h=h
+
+        self.planename=planename
 
         self.MAC_list=np.array([])
         self.x_list=np.array([])
@@ -24,6 +27,7 @@ class Plane:
         self.MAC_aircraft()
         self.equivalent_wing()
         self.define_airfoil(airfoil)
+
         # self.aerodynamic_properties()
 
     def help(self):
@@ -63,8 +67,10 @@ class Plane:
     def plot_plane(self):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
-        plt.plot(np.concatenate((self.y_list,self.y_list[::-1])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1])),color='red')
+        plt.plot(np.concatenate((self.y_list,self.y_list[::-1],[self.y_list[0]])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1],[self.x_list[0]-0.25*self.MAC_list[0]])),color='red')
         plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
+        plt.scatter(self.y_list,self.x_list)
+        plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
         plt.gca().invert_yaxis()
         plt.show()
 
@@ -139,9 +145,12 @@ class Plane:
     def equivalent_wing(self):
         self.sweep_eq = np.arctan((self.x_list[1] - self.x_list[0])/(self.y_list[1]-self.y_list[0])) #rad
         self.cr_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(-self.y_list[0])+self.MAC_list[0]
-        self.ct_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(self.b[2]-self.y_list[0])+self.MAC_list[0]
+        self.ct_eq = (self.MAC_list[1]-self.MAC_list[0])/(self.y_list[1]-self.y_list[0])*(self.b[2]/2-self.y_list[0])+self.MAC_list[0]
+        print(self.ct_eq)
         self.MAC_eq = self.MAC_part(self.cr_eq,self.ct_eq,self.sweep_eq,self.b[2])
         self.S_eq = (self.cr_eq+self.ct_eq)/2*self.b[2]
+        self.x_cr_eq = self.x_list[0]-np.tan(self.sweep_eq)*self.y_list[0]-0.25*self.cr_eq
+        self.x_ct_eq = self.x_list[0]+np.tan(self.sweep_eq)*(self.b[-1]/2-self.y_list[0])-0.25*self.ct_eq
 
 
     def define_airfoil(self,file_path):

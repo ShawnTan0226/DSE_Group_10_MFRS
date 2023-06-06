@@ -8,7 +8,9 @@ from Plane import Plane
 # Twist = [0, twist of 1st part, twist of 2nd part, ...]
 # dCmdEps = [0, dCmdEps of 1st part, dCmdEps of 2nd part, ...] Source: Roskam 6
 # CmO_airfoil = [[CmO_root, CmO_tip] for 1st part, [[CmO_root, CmO_tip] for 2nd part, ...] Source: Roskam 6
-#The horizontal stabiliser are at the wing tips and have a sweep of zero
+#The horizontal stabiliser are at the wing tips and have a sweep of zeroµ
+
+#TODO:check all the inputs units
 class AerodynamicProperties:
     def __init__(self,plane, dCmdEps, twist, CmO_airfoil, h=5000 ,V=110): #Altitude in ft
         self.h=h
@@ -62,7 +64,7 @@ class AerodynamicProperties:
         self.C_D_0 += 0.1 * self.C_D_0
         return self.C_D_0
 
-    def Cmac(self):
+    def calc_Cmac(self):
 
         self.Cmac = ((self.plane.A_list * (np.cos(self.plane.sweep) ** 2)) /
                      (self.plane.A_list + 2 * np.cos(self.plane.sweep))) * (self.CmO_root_list + self.CmO_tip_list) / 2\
@@ -138,12 +140,45 @@ class AerodynamicProperties:
     #    self.x_ac_h = self.plane.offset[-1]+ self.plane.c
     #    self.Cmdot = -2*self.CLalpha_h * self.eta_h *(self.plane.offset[-1]+ self.C
 
-    def C_Y_beta_wing(self):
-        self.C_Y_b_w = -0.00573 * self.dihedral #dihedral in deg
 
-    def C_y_beta_vertical(self):
-        constant = 0.724 + 3.06((self.Sv/self.plane.S)/(1+np.cos()))
-        self.C_Y_b_v = -self.kv * self.CL_alpha_v #kv - Roskam 6 fig. 10.12
+    def calc_C_Y_beta(self):
+        #wing
+        self.C_Y_b_w = -0.00573 * self.dihedral  # dihedral in deg
+
+        print("Are you training ")
+        cz=float(input())
+
+        #single vertical tail
+        constant = 0.724 + 3.06*((self.Sv/self.plane.S)/(1+np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A #
+        print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386)")
+        AvfAv=float(input('Avf/Av (if you dont know assume 1'))
+        Av_hfAvf = float(input('Avf/Av (if you dont know assume 1.2)'))
+        Kvh = float(input('Kvh (if you dont know assume 1.2)'))
+        self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
+        self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
+
+        # Assuming bv/2ri>3.5-> kv=1
+        self.C_Y_b_v_single = -self.CL_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
+
+        #Twin vertical tail
+        self.C_Y_b_v_twin = 2*self.C_Y_b_v_single #Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
+
+        #Final C_Y_beta
+        self.C_Y_b_single =  self.C_Y_b_w + self.C_Y_b_v_single
+        self.C_Y_b_twin = self.C_Y_b_w + self.C_Y_b_v_twin
+
+    def calc_C_l_beta(self):
+        #Wing-fuselage
+
+
+
+    def help(self,option):
+        print("Help for the coefficients, options:\n -Vertical Tail \n -Wing \n -Cmac")
+        if option == 'Vertical Tail':
+            print("The vertical tail sizing takes the follwing input\n -")
+        if option == 'Wing':
+            print("The wing sizing takes the follwing input\n -dihedral \n -")
+
 
 '''Inputs'''
 #Aerodynamic coefficients

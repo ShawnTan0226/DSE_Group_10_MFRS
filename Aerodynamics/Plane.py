@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d
-
+#TODO: Implement multiple airfoil
 class Plane:
     def __init__(self,Cri,taper,sweep,b,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat"):
         #Plane object has n sections
@@ -65,6 +65,7 @@ class Plane:
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
         plt.plot(np.concatenate((self.y_list,self.y_list[::-1])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1])),color='red')
         plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
+        plt.plot([self.MAC_eq[2], self.MAC_eq[2]], [self.MAC_eq[1] - 0.25 * self.MAC_eq[0]+ 0.25*self.cr_eq, self.MAC_eq[1] + 0.75 * self.MAC_eq[0]+ 0.25*self.cr_eq], color = 'purple')
         plt.gca().invert_yaxis()
         plt.show()
 

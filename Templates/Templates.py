@@ -1,9 +1,11 @@
 #####################################     TEMPLATES     ###############################
 
+
 # Template for graphs:
 fig, ax = plt.subplots()
 
-ax.plot(x, y, linestyle='-', label="Label")
+# Possible colours: 1) blue, 2) red, 3) green, 4) yellow, 5)
+ax.plot(x, y, linestyle='-', label="Label", color='SPECIFY COLOUR!')
 
 ax.set_xlabel('Axis Label')
 ax.set_ylabel('Axis Label')

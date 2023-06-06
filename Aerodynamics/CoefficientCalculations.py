@@ -165,10 +165,19 @@ class AerodynamicProperties:
 
     #Yaw rate derivatives
     def calc_C_Y_r(self):
-        self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
+        # self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
+        self.lv = self.x_ac_v - self.x_cg
+        self.zv = self.z_ac_v - self.z_cg
+
+        # self.calc_C_Y_beta()
+
+        self.C_Y_r = -2 * self.C_Y_beta_v * (self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa)) / self.b
+
 
     def calc_C_l_r(self):
-        self.C_l_r=0
+        self.C_l_r = self.C_l_r_w + self.C_l_r_v
+
+
     
     def calc_C_n_r(self):
         self.C_n_r=0

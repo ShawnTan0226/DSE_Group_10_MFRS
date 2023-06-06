@@ -24,6 +24,9 @@ class AerodynamicProperties:
 
         self.CmO_root_list = np.array([])
         self.CmO_tip_list = np.array([])
+
+        self.atmos()
+        self.aerodynamic_properties()
         for i in range(len(CmO_airfoil)):
             self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
             self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
@@ -65,7 +68,7 @@ class AerodynamicProperties:
         self.M = self.V / self.a
 
     ### AERODYNAMIC COEFFICIENT ###
-    def define_C_f(self, laminar_frac, part):
+    def define_C_f_wing(self, laminar_frac, part):
         C_f_laminar = 1.328 / np.sqrt(self.Re_list[part])
         C_f_turbulent = 0.455 / ((np.log10(self.Re_list[part])) ** 2.58 * (1 + 0.144 * self.M ** 2))
         C_f_total = laminar_frac * C_f_laminar + (1 - laminar_frac) * C_f_turbulent
@@ -74,7 +77,7 @@ class AerodynamicProperties:
 
     def define_C_D_part_wing(self, laminar_frac, part):
         # modern blended winglet IF= 1-1.01, so IF can be neglected
-        C_f = self.define_C_f(laminar_frac, part)
+        C_f = self.define_C_f_wing(laminar_frac, part)
         FF = (1 + 0.6 / self.plane.max_thickness_location * self.plane.max_thickness + 100 * (self.plane.max_thickness) ** (4)) * (
                     1.34 * self.M ** 0.18 * (np.cos(self.plane.sweep[part])) ** 0.28)
         print('FF', FF)
@@ -82,12 +85,24 @@ class AerodynamicProperties:
         C_D_part = FF * C_f * S_wet / self.plane.S
         return C_D_part
     
+    def define_C_f_other(self, laminar_frac, length):
+        Re = self.rho * self.V * length / self.nu
+        C_f_laminar = 1.328 / np.sqrt(Re)
+        C_f_turbulent = 0.455 / ((np.log10(Re)) ** 2.58 * (1 + 0.144 * self.M ** 2))
+        C_f_total = laminar_frac * C_f_laminar + (1 - laminar_frac) * C_f_turbulent
+        print('C_f_total', C_f_total)
+        return C_f_total
+    
     def define_C_D_part_nacelle(self, laminar_frac):
-        C_f = self.define_C_f(laminar_frac, 0)
-        f=3/1.2
+        cabinlength=17.40
+        l=1.5/9.6*cabinlength
+        d=0.4/9.6*cabinlength
+        C_f = self.define_C_f_other(laminar_frac, l)
+        f=l/d
         FF = 1+0.35/f
-        S_wet = 2 * self.plane.S_nacelle * 1.07
-        C_D_part = FF * C_f * S_wet / self.plane.S
+        S_wet = np.pi*d**2/4+np.pi*d*l
+        IF=0.036*(self.plane.MAC*d/self.plane.S)*(0.2)**2
+        C_D_part = FF * C_f * S_wet / self.plane.S+IF
         return C_D_part
 
     def define_C_D_0(self, laminar_frac):
@@ -148,15 +163,18 @@ class AerodynamicProperties:
         self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2)
 
     #Roll rate derivatives
-    def calc_C_Y_p(self):
+    def calc_C_Y_p(self): 
         #Should this be neglected?
-        self.C_Y_p=(self.z_vcos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.plane.b_tot*self.C_Y_b_v
+        self.C_Y_p=(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.plane.b_tot*self.C_Y_b_v
 
     def calc_C_l_p(self):
-        y=np.arange(0,self.plane.b_tot/2,self.plane.b_tot/2000)
-        Delta_alpha=y
-        Delta_C_l=self.normalisedC_L*Delta_alpha
-        self.C_l_p=-2*np.trapz(Delta_C_l*y,y)
+        Beta_Comp=(1-self.M**2)**0.5
+        Gamma_b=np.arctan(np.tan(self.plane.sweep_eq)/Beta_Comp)
+        k=self.c_l_alpha*Beta_Comp/(2*np.pi)
+        BA_k=Beta_Comp*self.plane.A/k
+        print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 418)")
+        AvfAv=float(input('BetaCL/k (if you dont know assume 1'))
+        self.C_l_p=0
     
     def calc_C_n_p(self):
         self.C_n_p_w=0
@@ -230,9 +248,9 @@ class AerodynamicProperties:
 
 
 
-dCmdEps = [0,0.4,0.4]
-twist = [0,0.1,0.1]
-CmO_airfoil = [[0.1,0.05],[0.2,0.1]] #Get from xfoil
-plane=Plane(9.72,[0.3,0.267],[38,38],[8.82,22])
-coefficients = AerodynamicProperties(plane, dCmdEps, twist, CmO_airfoil)
-print(coefficients.Cmac())
+# dCmdEps = [0,0.4,0.4]
+# twist = [0,0.1,0.1]
+# CmO_airfoil = [[0.1,0.05],[0.2,0.1]] #Get from xfoil
+# plane=Plane(9.72,[0.3,0.267],[38,38],[8.82,22])
+# coefficients = AerodynamicProperties(plane, dCmdEps, twist, CmO_airfoil)
+# print(coefficients.Cmac())

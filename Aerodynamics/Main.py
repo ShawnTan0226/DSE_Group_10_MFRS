@@ -1,5 +1,5 @@
 from Plane import Plane
-# from CoefficientCalculations import AerodynamicProperties
+from CoefficientCalculations import AerodynamicProperties
 # from BatterySize import Planform_calculation
 
 # MakePlane = Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",19902,2409,7.5,0.25,0.4)
@@ -20,6 +20,11 @@ from Plane import Plane
 
 
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])
+
+plane.MAC=4.04
+plane.S=81
+Coeff=AerodynamicProperties(plane,1,1,1)
+Coeff.define_C_D_part_nacelle(0.2)
 print(plane.y_quarter,plane.x_quarter,plane.MAC,plane.b,plane.MAC_list,plane.y_list)
 plane.plot_plane()
 plane.calculate_COG(pylon_cg=0.85, lg_cg=0.65, vertical_tail_cg=0.875, engine_mass=1224, engine_cg=0.85, battery_mass=10600, battery_cg=0.281, payload_mass=2903, payload_cg=0.281, system_mass=300, system_cg=0.281, MTOW=19900)

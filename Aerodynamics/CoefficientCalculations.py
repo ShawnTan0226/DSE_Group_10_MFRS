@@ -81,6 +81,14 @@ class AerodynamicProperties:
         S_wet = 2 * self.plane.S_list[part] * 1.07
         C_D_part = FF * C_f * S_wet / self.plane.S
         return C_D_part
+    
+    def define_C_D_part_nacelle(self, laminar_frac):
+        C_f = self.define_C_f(laminar_frac, 0)
+        f=3/1.2
+        FF = 1+0.35/f
+        S_wet = 2 * self.plane.S_nacelle * 1.07
+        C_D_part = FF * C_f * S_wet / self.plane.S
+        return C_D_part
 
     def define_C_D_0(self, laminar_frac):
         self.C_D_0 = 0

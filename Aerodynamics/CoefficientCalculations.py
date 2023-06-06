@@ -81,6 +81,14 @@ class AerodynamicProperties:
         S_wet = 2 * self.plane.S_list[part] * 1.07
         C_D_part = FF * C_f * S_wet / self.plane.S
         return C_D_part
+    
+    def define_C_D_part_nacelle(self, laminar_frac):
+        C_f = self.define_C_f(laminar_frac, 0)
+        f=3/1.2
+        FF = 1+0.35/f
+        S_wet = 2 * self.plane.S_nacelle * 1.07
+        C_D_part = FF * C_f * S_wet / self.plane.S
+        return C_D_part
 
     def define_C_D_0(self, laminar_frac):
         self.C_D_0 = 0
@@ -187,19 +195,25 @@ class AerodynamicProperties:
         self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
         self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
 
+        if self.plane.tailnumber == 1:
+            tn=1
+        else:
+            tn=2
         # Assuming bv/2ri>3.5-> kv=1
-        self.C_Y_b_v_single = -self.CL_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
-
-        #Twin vertical tail
-        self.C_Y_b_v_twin = 2*self.C_Y_b_v_single #Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
+        self.C_Y_b_v = -tn*self.CL_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
+        # Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
 
         #Final C_Y_beta
-        self.C_Y_b_single =  self.C_Y_b_w + self.C_Y_b_v_single
-        self.C_Y_b_twin = self.C_Y_b_w + self.C_Y_b_v_twin
+        self.C_Y_b =  self.C_Y_b_w + self.C_Y_b_v
 
-    def calc_C_l_beta(self):
+    def calc_C_l_beta(self): #eq: 10.34 Roskam 6
+        print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 393)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))#Use of sweep equivalent
+        clbetacLwf = float(input("What is Cl_beta/CL from fig. 10.20"))
+
+        print("Considering: Aspect ratio {} and Taper ratio {}")
+        clbetacLA = float(input())
         #Wing-fuselage
-
+        self.C_l_beta_wf = 57.3*(self.C_L*(clbetacLwf)*1*1 + clbetacLA) #Assumed no compressibility correction, fuselage correction =1 since no fuselage
 
 
     def help(self,option):

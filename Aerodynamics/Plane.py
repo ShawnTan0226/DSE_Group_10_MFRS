@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d
-
+#TODO: Implement multiple airfoil
 class Plane:
     def __init__(self,Cri,taper,sweep,b,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat"):
         #Plane object has n sections

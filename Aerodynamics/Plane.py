@@ -4,11 +4,12 @@ import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 #TODO: Implement multiple airfoil
 class Plane:
-    def __init__(self,Cri,taper,sweep,b,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
+    def __init__(self,Cri,taper,sweep,b,twist,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
         #Plane object has n sections
         self.c=np.array([Cri]) #array of chord [m] form: [Middle c,c1,c2,c3,...,cn]
         self.taper = np.array(taper) #array of taper ratio form: [taper1,taper2,taper3,...,tapern]
         self.sweep = np.array(np.deg2rad(sweep)) #array of sweep angle [rad] form: [sweep1,sweep2,sweep3,...,sweepn]
+        self.twist = np.array(np.deg2rad(twist))
         self.b = np.concatenate(([0],b)) #array of span [m] form: [0,b1,b2,b3,...,bn]
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
         
@@ -291,6 +292,13 @@ class Plane:
         self.length = total_length
 
         return x_cg
+
+    def vert_stab(self):
+        #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in
+        # such a way that the moment arm is maximised
+        C_v_t =
+        #Single
+        self.
 
 
 

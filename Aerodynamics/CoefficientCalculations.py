@@ -207,14 +207,25 @@ class AerodynamicProperties:
         self.C_Y_b =  self.C_Y_b_w + self.C_Y_b_v
 
     def calc_C_l_beta(self): #eq: 10.34 Roskam 6
+        self.calc_C_Y_beta()
+
         print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 393)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))#Use of sweep equivalent
         clbetacLwf = float(input("What is Cl_beta/CL from fig. 10.20"))
 
-        print("Considering: Aspect ratio {} and Taper ratio {}")
-        clbetacLA = float(input())
-        #Wing-fuselage
-        self.C_l_beta_wf = 57.3*(self.C_L*(clbetacLwf)*1*1 + clbetacLA) #Assumed no compressibility correction, fuselage correction =1 since no fuselage
+        print("Considering: Aspect ratio {} and Taper ratio {}".format(self.plane.A,self.plane.taper_eq))
+        clbetacLA = float(input("What is Cl_beta/CL from fig. 10.23"))
 
+        print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 395)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))
+        clbetadihed = float(input("What is Cl_beta/dihedral from fig. 10.24"))
+
+        print("Considering:Aspect ratio {} and Taper ratio {} (Roskam 6 - p. 396)".format(self.plane.A,self.plane.taper_eq))
+        x = float(input("What is the dCL/(epsilon*tan(sweep)) from fig 10.26"))
+
+        #Wing-fuselage
+        self.C_l_beta_wf = 57.3*(self.C_L*(clbetacLwf*1*1 + clbetacLA) + self.dihedral*clbetadihed + x * self.plane.twist[-1] * np.tan(self.plane.sweep_eq))#Assumed no compressibility correction, fuselage correction =1 since no fuselage
+
+        #Vertical Tail
+        self.C_l_beta_v = self.C_Y_b_v
 
     def help(self,option):
         print("Help for the coefficients, options:\n -Vertical Tail \n -Wing \n -Cmac")

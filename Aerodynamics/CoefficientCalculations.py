@@ -172,13 +172,25 @@ class AerodynamicProperties:
         Gamma_b=np.arctan(np.tan(self.plane.sweep_eq)/Beta_Comp)
         k=self.c_l_alpha*Beta_Comp/(2*np.pi)
         BA_k=Beta_Comp*self.plane.A/k
-        print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 418)")
-        AvfAv=float(input('BetaCL/k (if you dont know assume 1'))
-        self.C_l_p=0
+        print("Gamma_b =",Gamma_b,"BA_k =",BA_k,"Taper =",self.plane.taper_eq,"What is BetaClp/k? (Roskam 6 - p. 418)")
+        BetaClp_k=float(input('BetaClp/k ='))
+        print("A =",self.plane.A,"Quarter chord sweep(Lambda_1/4) =",self.plane.sweep_eq,"What is Clp/CL^2? (Roskam 6 - p. 420)")
+        Clp_CL2=float(input('Clp/CL^2 ='))
+        Deltaclp_drag=Clp_CL2*self.C_L**2-0.125*self.C_D_0
+
+        c_l_p_w=BetaClp_k*k/Beta_Comp*1+Deltaclp_drag
+        c_l_p_v=2/self.b**2((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+        self.C_l_p=c_l_p_w+c_l_p_v
     
     def calc_C_n_p(self):
-        self.C_n_p_w=0
-        self.C_n_p_v=(self.l_v*np.cos(self.aoa) +self.z_v*np.sin(self.aoa))(self.z_vcos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.plane.b_tot*self.C_Y_b_v
+        print("A =",self.plane.A,"Taper ratio =",self.plane.taper_eq,"What is Cnp/eps? (Roskam 6 - p. 420)")
+        Cnp_eps=float(input('Cnp/eps ='))
+        Sweep=self.plane.sweep_eq
+        A=self.plane.A
+        xbar_cbar=0.25
+        C_n_p_CL=-1/6*(A+6*(A+np.cos(Sweep))*(xbar_cbar*np.tan(Sweep)/A+np.tan(Sweep)**2/12))/(A+4*np.cos(Sweep))
+        self.C_n_p_w=C_n_p_CL*self.C_L+Cnp_eps*self.plane.twist[-1]
+        self.C_n_p_v=-2/self.b**2((self.l_v*np.cos(self.aoa)-self.z_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
         self.C_n_p=self.C_n_p_w+self.C_n_p_v
 
     #Yaw rate derivatives

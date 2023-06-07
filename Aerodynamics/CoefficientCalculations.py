@@ -14,14 +14,31 @@ from Plane import Plane
 
 #TODO:check all the inputs units
 class AerodynamicProperties:
-    def __init__(self,plane, dCmdEps, twist, sweep, CmO_airfoil, h=5000 ,V=110): #Altitude in ft
+    def __init__(self,plane, tail,Steady_state, CmO_airfoil, h=5000 ,V=110): #Altitude in ft
         self.h=h
         self.V=V
         self.plane=plane
+        self.tail=tail
+        self.Steady_state=Steady_state
 
-        self.dCmdEps = np.array(dCmdEps)
-        self.twist = np.array(twist)
-        self.sweep = sweep
+        self.MAC=self.plane.MAC
+        self.b=self.plane.b_tot
+        self.x_ac=self.plane.x_quarter
+        self.x_cg=self.plane.x_cg
+
+        self.x_tail=self.tail.x_tail
+        self.z_tail=self.tail.z_tail
+        self.S_tail=self.tail.S_tail
+
+        self.l_v=self.x_tail-self.plane.x_cg
+        self.z_v=self.z_tail-self.plane.z_cg
+        
+        self.C_L=Steady_state.C_L
+        self.C_D=Steady_state.C_D
+        self.aoa=Steady_state.aoa
+        self.T_c=Steady_state.T_c
+        self.horisteady=Steady_state.horisteady
+
 
         self.CmO_root_list = np.array([])
         self.CmO_tip_list = np.array([])
@@ -35,6 +52,7 @@ class AerodynamicProperties:
         directory_path = "./Xflr dat"
         file_list = []
         data={}
+
 
         for filename in os.listdir(directory_path):
             file_list.append(filename)
@@ -110,6 +128,7 @@ class AerodynamicProperties:
         self.C_D_0 = 0
         for i in range(len(self.plane.taper)):
             self.C_D_0 += self.define_C_D_part_wing(laminar_frac, i)
+        self.C_D_0 += self.define_C_D_part_nacelle(laminar_frac)
         self.C_D_0 += 0.1 * self.C_D_0
         return self.C_D_0
 
@@ -123,29 +142,34 @@ class AerodynamicProperties:
     ### DYNAMIC STABILITY COEFFICIENTS ###
 
     def CLCDalphadot(self):
-        self.CLdot=0
-        self.CDdot=0
+        self.C_L_alphadot=0
+        self.C_D_alphadot=0
 
     def calc_C_Z_0(self):
-        self.C_Z_0=0
+        #Steady flight
+        if self.horisteady:
+            self.C_Z_0=0
+        else:
+            self.C_Z_0=-self.C_D+self.T_c
 
     def calc_C_X_0(self):
-        self.C_X_0=-self.C_l-self.T_c*(self.alpha0+self.ip)
+        self.C_X_0=-self.C_l-self.T_c*(self.aoa+self.plane.ip)
+
 
 
     #Speed derivatives
     def calc_C_X_u(self):
         self.C_X_u=-3*self.C_D*(1-self.C_D_T_c)
 
-    def calc_C_Z_u(self,ip):
-        self.C_Z_u=-2*self.C_L+self.C_D*(-(self.alpha0+ip)+3*self.C_D_T_c)
+    def calc_C_Z_u(self):
+        self.C_Z_u=-2*self.C_L+self.C_D*(-(self.alpha0+self.plane.ip)+3*self.C_D_T_c)
 
     def calc_C_m_u(self):
         self.C_m_u=-3*self.C_D*self.C_m_T_c
 
     #angle of attack derivatives
     def calc_C_X_alpha(self):
-        self.C_X_alpha=-self.C_L*(1-2*self.C_L_alpha/(self.pi*self.plane.A*self.e))
+        self.C_X_alpha=-self.C_L*(1-2*self.C_L_alpha/(np.pi*self.plane.A*self.e))
 
     def calc_C_Z_alpha(self):
         self.C_Z_alpha=-self.C_L_alpha-self.C_D
@@ -166,7 +190,7 @@ class AerodynamicProperties:
     #Roll rate derivatives
     def calc_C_Y_p(self): 
         #Should this be neglected?
-        self.C_Y_p=(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.plane.b_tot*self.C_Y_b_v
+        self.C_Y_p=(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b*self.C_Y_b_v
 
     def calc_C_l_p(self):
         Beta_Comp=(1-self.M**2)**0.5
@@ -180,7 +204,7 @@ class AerodynamicProperties:
         Deltaclp_drag=Clp_CL2*self.C_L**2-0.125*self.C_D_0
 
         c_l_p_w=BetaClp_k*k/Beta_Comp*1+Deltaclp_drag
-        c_l_p_v=2/self.b**2((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+        c_l_p_v=2/self.plane.b_tot**2((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
         self.C_l_p=c_l_p_w+c_l_p_v
     
     def calc_C_n_p(self):
@@ -198,7 +222,7 @@ class AerodynamicProperties:
     def calc_C_Y_r(self):
         # self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
         #NOTE: incorporate x_ac_v and z_ac_b and z_cg in the plane object code
-        self.lv = self.x_ac_v - self.plane.x_cg
+        self.lv = self.x_ac_v - self.x_cg
         self.zv = self.z_ac_v - self.z_cg
 
         # self.calc_C_Y_beta()
@@ -303,7 +327,17 @@ class AerodynamicProperties:
         self.C_l_beta_wf = 57.3*(self.C_L*(clbetacLwf*1*1 + clbetacLA) + self.dihedral*clbetadihed + x * self.plane.twist[-1] * np.tan(self.plane.sweep_eq))#Assumed no compressibility correction, fuselage correction =1 since no fuselage
 
         #Vertical Tail
-        self.C_l_beta_v = self.C_Y_b_v
+        self.C_l_beta_v = self.C_Y_b_v*(self.z_v*np.cos(self.aoa) - self.l_v*np.sin(self.aoa))/self.plane.b[-1] #Roskam 6 eq. 10.34
+
+    def calc_C_n_beta(self): #eq: 10.35 Roskam 6
+        self.C_n_beta=-self.C_Y_b_v*(self.l_v*np.cos(self.aoa) + self.z_v*np.sin(self.aoa))/self.plane.b[-1]
+
+    def calc_C_Y_betadot(self):
+        self.C_Y_betadot = 0 #Usually neglected for high AR
+
+            
+    
+
 
     def help(self,option):
         print("Help for the coefficients, options:\n -Vertical Tail \n -Wing \n -Cmac")

@@ -1,8 +1,16 @@
 from Plane import Plane
 from CoefficientCalculations import AerodynamicProperties
-from ..Systems_and_structures.LG_design import LandingGear
+
+import sys
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.join(current_dir, "..", "Systems_and_Structures")
+sys.path.append(parent_dir)
+from LG_design import LandingGear
+
 from BatterySize import Planform_calculation
 
+LandingGear(10,10,10,10,10,10,10,10)
 # MakePlane = Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",19902,2409,7.5,0.25,0.4)
 # MakePlane.makeplane()
 # MakePlane.plane.xflrvelues()
@@ -18,7 +26,6 @@ from BatterySize import Planform_calculation
 # MakePlane.plane.plot_plane()
 # print(MakePlane.plane.MAC)
 # print(MakePlane.plane.C_D_0)
-LandingGear()
 Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",19902,2409,7.5,0.25,0.4)
 plane=Batterysize.makeplane()
 Coeff=AerodynamicProperties(plane,1,1,1)

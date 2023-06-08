@@ -296,10 +296,34 @@ class Plane:
     def vert_stab(self):
         #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in
         # such a way that the moment arm is maximised
-        C_v_t =
-        #Single
-        self.
+        # C_v_t =
+        # #Single
+        # self.asd
+        x=0
+class Tail:
+    def __init__(self,A,Taper,Sweep,Area,coords_bot,min_dy,b_i):
+        self.A_v=A
+        self.Taper_v=Taper
+        self.Sweep_v=Sweep
+        self.S_v=Area
+        self.coords_bot=coords_bot
+        self.min_dy=min_dy
+        self.b_i=b_i
+        self.Tail_positioning()
+    def Tail_positioning(self):
+        if self.coords_bot[-1]>self.coords_bot[0] and self.b_i<self.min_dy:
+            self.x_v_end=self.coords_bot[-1]
+        else:
+            self.x_v_end=(self.coords_bot[1]-self.coords_bot[0])/(self.b_i)*self.min_dy+self.coords_bot[0]
 
+# cog
+# wing Span
+# sweep
+# MTOW
+# Tip chord
+# MAC
+# Dihedral
+# Enginer placement
 
 
 

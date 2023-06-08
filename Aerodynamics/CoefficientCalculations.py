@@ -15,8 +15,6 @@ from Plane import Plane
 #TODO:check all the inputs units
 class AerodynamicProperties:
     def __init__(self,plane, tail,Steady_state, CmO_airfoil, h=5000 ,V=110): #Altitude in ft
-        self.h=h
-        self.V=V
         self.plane=plane
         self.tail=tail
         self.Steady_state=Steady_state
@@ -25,14 +23,21 @@ class AerodynamicProperties:
         self.b=self.plane.b_tot
         self.x_ac=self.plane.x_quarter
         self.x_cg=self.plane.x_cg
+        self.dihedral=self.plane.dihedral
 
         self.x_tail=self.tail.x_tail
         self.z_tail=self.tail.z_tail
         self.S_tail=self.tail.S_tail
+        self.Cl_alpha_v=self.tail.C_L_alpha_v
+        self.sweep_half_v=self.tail.sweep_half_v
+        self.Av=self.tail.A_v
+        self.Sv=self.tail.S_v
 
         self.l_v=self.x_tail-self.plane.x_cg
         self.z_v=self.z_tail-self.plane.z_cg
         
+        self.h=Steady_state.h
+        self.V=Steady_state.V
         self.C_L=Steady_state.C_L
         self.C_D=Steady_state.C_D
         self.aoa=Steady_state.aoa
@@ -61,7 +66,7 @@ class AerodynamicProperties:
             filename=directory_path+'/'+file
             df = pd.read_csv(filename,header=None)
             df=np.array(df)
-            data[file[:4]]=df
+            data[file]=df
 
         self.data=data[self.plane.planename]
         self.calc_C_L_alpha()
@@ -146,15 +151,15 @@ class AerodynamicProperties:
         self.C_D_alphadot=0
 
     def calc_C_Z_0(self):
+        self.C_X_0=-self.C_l-self.T_c*(self.aoa+self.plane.ip)
+
+    def calc_C_X_0(self):
         #Steady flight
         if self.horisteady:
             self.C_Z_0=0
         else:
             self.C_Z_0=-self.C_D+self.T_c
-
-    def calc_C_X_0(self):
-        self.C_X_0=-self.C_l-self.T_c*(self.aoa+self.plane.ip)
-
+        
 
 
     #Speed derivatives
@@ -185,7 +190,7 @@ class AerodynamicProperties:
         self.C_Z_q=-self.C_L_alpha*(self.x_ac-self.x_cg)/(self.MAC)
 
     def calc_C_m_q(self):
-        self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2)
+        self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2) 
 
     #Roll rate derivatives
     def calc_C_Y_p(self): 
@@ -238,10 +243,9 @@ class AerodynamicProperties:
 
         self.C_l_r_slope = ((1 + (self.plane.A * (1 - self.B**2)) / (2 * self.B * (self.plane.A * self.B + 2 * np.cos(self.plane.sweep_eq)))) +
                            (((self.plane.A * self.B + 2*np.cos(self.plane.sweep_eq)) / (self.plane.A * self.B + 4*np.cos(self.plane.sweep_eq))) * ((np.tan(self.plane.sweep_eq)**2)/8)) * self.C_l_r_slope_low) / \
-                           (1 + ((self.plane.A + 2*np.cos(self.plane.sweep_eq))/ (self.plane.A + 4*np.cos(self.plane.sweep_eq))) * ((np.tan(plane.sweep_eq)**2) / 8))
+                           (1 + ((self.plane.A + 2*np.cos(self.plane.sweep_eq))/ (self.plane.A + 4*np.cos(self.plane.sweep_eq))) * ((np.tan(self.plane.sweep_eq)**2) / 8))
 
         self.C_l_r_gamma = 0.083 * (np.pi * self.plane.A * np.sin(self.plane.sweep_eq)) / (self.plane.A + 4*np.cos(self.plane.sweep_eq))
-        self.dihedral = 0 #no dihedral
 
         self.C_l_r_epsilon = float(input("From figure 10.42 (page 430) in Roskam 6, provide slope value (OTHERWISE: assume 0.125 for A=6, Taper=0.26 and sweep=38"))
 
@@ -302,7 +306,7 @@ class AerodynamicProperties:
         else:
             tn=2
         # Assuming bv/2ri>3.5-> kv=1
-        self.C_Y_b_v = -tn*self.CL_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
+        self.C_Y_b_v = -tn*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
         # Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
 
         #Final C_Y_beta

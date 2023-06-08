@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import integrate
 
-n = 100# resolution of data along half span
+n = 100 # resolution of data along half span
 
 Sweep05 = np.deg2rad(35.36)
 
@@ -183,17 +183,17 @@ def PrelimSizing(Vx, Vy, Mx, My, Mz, chords):
     ts = abs(Vy) * Q / (Iyy * tau) # spar thickness needed to withstand shear stress due to bending
 
     # thickness of wingbox for torque
-    twb = Mz/(2 * chords**2 * (0.4*0.15) * tau)
+    twb = abs(Mz)/(2 * chords**2 * (0.4*0.15) * tau)
 
     #plt.plot(y_points, A)
     #plt.plot(y_points, Ixx)
     #plt.show()
     return Ixx, Iyy, ts, twb
 
-
+nl = -1 # loadfactor
 CruiseDistribution, TODistribution, y_points = importdat(n)
 Lcruise, Ltakeoff, TC, TTO, W, M_cruise, M_TO, Dcruise, Dtakeoff = forces(CruiseDistribution, TODistribution, y_points, n)
-Vx, Vy, Mx, My, Mz = InternalLoads(Lcruise, TC, W, Dcruise, M_cruise, n, y_points, CruiseDistribution['y-span'][-1], Sweep05)
+Vx, Vy, Mx, My, Mz = InternalLoads(nl*Lcruise, TC, W, abs(nl)*Dcruise, nl*M_cruise, n, y_points, CruiseDistribution['y-span'][-1], Sweep05)
 #plt.plot(y_points, Vy, label='Internal shear force on the y axis, take off')
 Ixx, Iyy, ts, twb = PrelimSizing(Vx, Vy, Mx, My, Mz, CruiseDistribution['Chord'])
 
@@ -207,9 +207,9 @@ Ixx, Iyy, ts, twb = PrelimSizing(Vx, Vy, Mx, My, Mz, CruiseDistribution['Chord']
 #plt.show()
 
 def plots():
-    plt.plot(y_points,  Lcruise-W, label='Ixx')
-    plt.plot(y_points, Lcruise, label='Ixx')
-    plt.plot(y_points, -W, label='Ixx')
+    plt.plot(y_points, ts, label='ts')
+    plt.plot(y_points, twb, label='twb')
+    #plt.plot(y_points, -W, label='Ixx')
     #plt.plot(y_points, Mx, label='Mx')
     #plt.plot(y_points, , label='tot')
     #plt.plot(y_points, My, label='My')
@@ -217,7 +217,7 @@ def plots():
     plt.xlabel("z [m]")
     plt.ylabel("Ixx [m^4]")
     plt.grid()
-    #plt.legend()
+    plt.legend()
     plt.show()
 
 plots()

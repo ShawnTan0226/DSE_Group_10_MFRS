@@ -1,5 +1,5 @@
 import numpy as np
-y=2
+
 class LandingGear:
     def __init__(self, xcg, span, sweep_QC, MTOW, chord_tip, chord_root, MAC, dihedral):
         self.xcg = xcg
@@ -23,7 +23,6 @@ class LandingGear:
         # Find lm and ln
         self.dis_x_cg_NLG = self.xcg - self.pos_x_NLG
         self.dis_x_cg_MLG = self.pos_x_MLG - self.xcg
-
 
     def loads(self):
         # Set number of struts
@@ -61,16 +60,14 @@ class LandingGear:
         if pusher:
             self.ang_lat = np.arctan((self.height_MLG + np.tan(self.dihedral) * pos_y_engine - prop_radius) / (pos_y_engine - self.track_width_MLG / 2))
         else:
-            self.ang_lat = np.arctan((self.height_MLG + np.tan(self.dihedral) * self.span/2) / (self.span - self.track_width_MLG / 2))
+            self.ang_lat = np.arctan((self.height_MLG + np.tan(self.dihedral) * self.span/2) / (self.span / 2 - self.track_width_MLG / 2))
 
         if self.ang_lat <= np.radians(5):
             print("Lateral clearance criterion not fulfilled!")
 
 
 
-drone = LandingGear(4.06, 22.05, np.radians(38), 19902, 1.5506, 5.800, 3, np.radians(3))
+drone = LandingGear(4.342, 16.4869908, np.radians(38), 6521.24, 1.550632326, 5.800, 3, 0)
 drone.positioning()
 drone.clearance()
 drone.loads()
-print(drone.height_MLG, drone.xcg, drone.pos_x_MLG, drone.pos_x_NLG, drone.track_width_MLG)
-

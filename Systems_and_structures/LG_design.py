@@ -1,5 +1,5 @@
 import numpy as np
-
+y=2
 class LandingGear:
     def __init__(self, xcg, span, sweep_QC, MTOW, chord_tip, chord_root, MAC, dihedral):
         self.xcg = xcg

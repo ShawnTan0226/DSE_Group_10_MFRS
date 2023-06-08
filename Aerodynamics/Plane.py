@@ -4,11 +4,12 @@ import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 #TODO: Implement multiple airfoil
 class Plane:
-    def __init__(self,Cri,taper,sweep,b,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat"):
+    def __init__(self,Cri,taper,sweep,b,twist,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
         #Plane object has n sections
         self.c=np.array([Cri]) #array of chord [m] form: [Middle c,c1,c2,c3,...,cn]
         self.taper = np.array(taper) #array of taper ratio form: [taper1,taper2,taper3,...,tapern]
         self.sweep = np.array(np.deg2rad(sweep)) #array of sweep angle [rad] form: [sweep1,sweep2,sweep3,...,sweepn]
+        self.twist = np.array(np.deg2rad(twist))
         self.b = np.concatenate(([0],b)) #array of span [m] form: [0,b1,b2,b3,...,bn]
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
         
@@ -27,6 +28,8 @@ class Plane:
         self.MAC_aircraft()
         self.equivalent_wing()
         self.define_airfoil(airfoil)
+
+        self.tailnumber = number_of_tail
 
         # self.aerodynamic_properties()
 
@@ -150,6 +153,9 @@ class Plane:
         self.S_eq = (self.cr_eq+self.ct_eq)/2*self.b[2]
         self.x_cr_eq = self.x_list[0]-np.tan(self.sweep_eq)*self.y_list[0]-0.25*self.cr_eq
         self.x_ct_eq = self.x_list[0]+np.tan(self.sweep_eq)*(self.b[-1]/2-self.y_list[0])-0.25*self.ct_eq
+
+        self.sweep_eq_half = np.arctan(((self.x_ct_eq+0.5*self.ct_eq)-(self.x_cr_eq+0.5*self.cr_eq))/(self.b[2]/2))
+        self.taper_eq = self.ct_eq/self.cr_eq
 
 
     def define_airfoil(self,file_path):
@@ -287,6 +293,37 @@ class Plane:
 
         return x_cg
 
+    def vert_stab(self):
+        #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in
+        # such a way that the moment arm is maximised
+        # C_v_t =
+        # #Single
+        # self.asd
+        x=0
+class Tail:
+    def __init__(self,A,Taper,Sweep,Area,coords_bot,min_dy,b_i):
+        self.A_v=A
+        self.Taper_v=Taper
+        self.Sweep_v=Sweep
+        self.S_v=Area
+        self.coords_bot=coords_bot
+        self.min_dy=min_dy
+        self.b_i=b_i
+        self.Tail_positioning()
+    def Tail_positioning(self):
+        if self.coords_bot[-1]>self.coords_bot[0] and self.b_i<self.min_dy:
+            self.x_v_end=self.coords_bot[-1]
+        else:
+            self.x_v_end=(self.coords_bot[1]-self.coords_bot[0])/(self.b_i)*self.min_dy+self.coords_bot[0]
+
+# cog
+# wing Span
+# sweep
+# MTOW
+# Tip chord
+# MAC
+# Dihedral
+# Enginer placement
 
 
 

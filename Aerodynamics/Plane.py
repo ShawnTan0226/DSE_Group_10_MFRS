@@ -491,18 +491,18 @@ class Tail:
 
         #Compare best option
         if self.S_v_b>self.S_v_wt:
-            self.S_v = np.copy(self.S_v_b)
+            self.S_v = 2*np.copy(self.S_v_b)
             self.x_tail = self.x_v
             self.z_tail = self.zv
             self.A_v = self.A_v
             print("Vertical stabiliser on Body section with dy = {} ".format(self.min_dy))
 
         else:
-            self.S_v = np.copy(self.S_v_wt)/2
+            self.S_v = 2*np.copy(self.S_v_wt)
             b = (self.S_v_wt/2/self.MAC_wt)
             self.x_tail = self.l_wt + self.x_cg
             self.z_tail = -(b)*(self.MAC_wt-cr)/(cr-self.taper_v*cr)
-            self.A_v = self.b**2/self.S_v
+            self.A_v = b**2/self.S_v
             print("Vertical stabiliser on Wingtips".format(self.min_dy))
 
 

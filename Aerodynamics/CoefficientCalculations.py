@@ -207,12 +207,8 @@ class AerodynamicProperties:
         self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
         self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
 
-        if self.tail.tailnumber == 1:
-            tn=1
-        else:
-            tn=2
         # Assuming bv/2ri>3.5-> kv=1
-        self.C_Y_b_v = -tn*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
+        self.C_Y_b_v = -1*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
         # Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
 
         #Final C_Y_beta

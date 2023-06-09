@@ -342,30 +342,78 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self,plane,Taper,Sweep,Area,min_dy,eta,SrS,Sideslip_at_enginefail,T_engine, d_engine, tail_number,A_v=2,
-                 thickness_v=0.12,def_rudder_emergency = 20,Cl_alpha=2*np.pi, sweep_half_v=0):
+    def __init__(self,plane,Sweep,eta,SrS,T_engine, d_engine,x_cg = 2,taper_v=0.4,A_v=2,
+                 thickness_v=0.12,def_rudder_emergency = 20, beta_max=30, Cl_alpha=2*np.pi,
+                 sweep_half_v=0, V_stall = 50, density = 1.225):
         self.A_v=A_v
-        self.Taper_v=Taper
+        self.Taper_v=taper_v
         self.Sweep_v=Sweep
-        self.S_v=Area
-        self.coords_bot=plane.coords_bot
-        self.min_dy=min_dy
-        self.b_i=b_i
+        self.V_s = V_stall
+        self.density = density
 
-        self.tailnumber=tail_number
-        self.Tail_positioning()
+
         self.eta = eta #How much of the span does the rudder take
         self.SrS= SrS #Part of surface used for the rudder (Roskam 2 for first iteration)
         self.thickness_v = thickness_v
+        self.taper_v = taper_v
+
         self.df_deg = def_rudder_emergency
         self.df_rad = np.deg2rad(def_rudder_emergency)
+
         self.cl_alpha_theory = Cl_alpha
         self.sweep_half_v = sweep_half_v
-        self.beta = Sideslip_at_enginefail
+
+        self.beta_max_rad = np.deg2rad(beta_max)#Make sure to add safety factor
+        self.beta_engine_fail = self.beta_max_rad*0.8
+
+        self.plane = plane #plane pobject
+        self.x_cg = x_cg
+        self.coords_bot=plane.coords_bot
+        self.b_i=plane.b_i
 
         self.T_engine = T_engine #Max thrust of one engine
         self.d_engine = d_engine #distance of engine from centerline
 
+    def gradient(self, f, x, step):
+        return (f(x + step) - f(x - step)) / (step * 2)
+
+    def newtonRaphson(self, f, x0, e, N, h, relax):
+        print('\n\n*** NEWTON RAPHSON METHOD IMPLEMENTATION ***')
+        i = 0
+        step = 1
+        flag = 1
+        condition = True
+        while condition:
+            # if g(f,x0,h) == 0.0:
+            #     print('Divide by zero error!')
+            #     break
+            print('x0---', x0)
+            print('value---', f(x0))
+            print('grad---', self.gradient(f, x0, h))
+            x1 = x0 * relax + (x0 - f(x0) / (self.gradient(f, x0, h))) * (1 - relax)
+            # print('Iteration-%d, x1 = %0.6f and f(x1) = %0.6f' % (step, x1, f(x1)))
+            x0 = x1
+            step = step + 1
+            newvalue = f(x1)
+            print(newvalue)
+            # if g(f,buildingno,x0,h)<0:
+            #     x1=x1/relax
+
+            if abs(np.max(newvalue)) < e:
+                condition = False
+            if step > N:
+                print('\nNot Convergent.')
+                flag = 2
+                condition = False
+            i += 1
+            print('x1---', x1)
+
+        if flag == 1:
+            print('\nRequired root is: %0.8f', x1)
+            return x0, i, x1
+        else:
+            print('\nNot Convergent.')
+            return 1000, i, "No solution found"
 
     def calc_flap_span_factor(self):
         print("Considering that the flap span is {} ?".format(self.eta))
@@ -390,7 +438,8 @@ class Tail:
         self.CL_alpha_w = 2*np.pi/(1+2*np.pi/np.pi/self.A_v)
 
     def calc_rudder_effectiveness(self):
-        print("Considering that the cf/c is {} and A is {}".format(self.cfc, self.A_v))
+        print("Considering that the cf/c is {} and A_v is {}".format(self.cfc, self.A_v))
+        print("A_v is only 2 if you choose for a body configuraton, if not, change A_v in class input to the A_v of the wingtip VS and check your findings")
         self.rudder_effectiveness = float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
 
     def calc_deltacl_rudder(self):
@@ -401,18 +450,61 @@ class Tail:
 
         self.delta_cL_rudder = self.Kb*self.delta_cl*self.CL_alpha_w/self.cl_alpha_theory*self.rudder_effectiveness
 
-    def taper_v(self):
 
-    def dimension(self):
-        #distance cg to end of
+    def calc_xv(self,S_v): #Body
+        cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
+        self.min_dy = np.tan(self.beta_max_rad)*cr
+
+        MAC = 2/3 * (cr+self.taper_v*cr+self.taper_v**2*cr)/(1+self.taper_v)
+        b = (self.A_v/S_v)**0.5
+
+        self.zv = -(b)*(MAC-cr)/(cr-self.taper_v*cr)
+
+        self.sweep_v = np.arctan((0.25*cr-0.25*MAC)/(self.zv))
+        self.x_v = np.tan(self.sweep_v)*zv
+
+    def calc_lv(self,S_v):#Body
+        self.calc_xv(S_v)
+        self.x_v_end_body = (self.coords_bot[1] - self.coords_bot[0]) / (self.b_i) * self.min_dy + self.coords_bot[0]
+        cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
+        self.lv = self.x_v_end_body-self.x_cg-cr+self.x_v
+
+    def f(self,S_v):
+        self.calc_lv(S_v)  # keep in the loop
+        f = 2* 0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.lv - self.T_engine * self.d_engine
+        return f
 
     def tail_sizing(self):
         self.calc_deltacl_rudder()
+        self.calc_CL_alpha_w()
+
+        #Body
+        self.S_v_b = self.newtonRaphson(self.f,30,0.01,10000,0.00010,1)
 
         #Wingtips
-        c[-1]
+        cr_t = self.plane.c[-1]
+        self.MAC_wt = 2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
 
-        self.S_v = (self.d_engine*self.T_engine)
+        self.l_wt = -0.75 * cr + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
+        self.S_v_wt = self.T_engine * self.d_engine/2/(0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * self.l_wt)
+
+
+        #Compare best option
+        if self.S_v_b>self.S_v_wt:
+            self.S_v = np.copy(self.S_v_b)
+            self.x_tail = self.x_v
+            self.z_tail = self.zv
+            self.A_v = self.A_v
+            print("Vertical stabiliser on Body section with dy = {} ".format(self.min_dy))
+
+        else:
+            self.S_v = np.copy(self.S_v_wt)/2
+            b = (self.S_v_wt/2/self.MAC_wt)
+            self.x_tail = self.l_wt + self.x_cg
+            self.z_tail = -(b)*(self.MAC_wt-cr)/(cr-self.taper_v*cr)
+            self.A_v = self.b**2/self.S_v
+            print("Vertical stabiliser on Wingtips".format(self.min_dy))
+
 
 
 

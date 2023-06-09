@@ -27,7 +27,8 @@ class AerodynamicProperties:
 
         self.x_tail=self.tail.x_tail
         self.z_tail=self.tail.z_tail
-        self.S_tail=self.tail.S_tail
+
+
         self.Cl_alpha_v=self.tail.C_L_alpha_v
         self.sweep_half_v=self.tail.sweep_half_v
         self.Av=self.tail.A_v

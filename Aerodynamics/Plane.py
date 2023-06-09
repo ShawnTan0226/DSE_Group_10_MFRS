@@ -15,7 +15,7 @@ class Plane:
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
         
         self.b_tot=self.b[-1] #total span [m]
-        self.coords=np.array([]) 
+        self.coords=np.array([])
         self.V=V
         self.h=h
 
@@ -247,6 +247,7 @@ class Plane:
         total_length = max((0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]), self.c[0])
 
         #-----------COG DETERMINATION with all other subsystems------------------------------
+        self.MTOW=MTOW
         total_structural_mass = 0.26 * MTOW
 
         #Defining each subsystem
@@ -294,6 +295,44 @@ class Plane:
         self.length = total_length
 
         return x_cg
+    
+    def calculate_MOI(self):
+        chord_body_section = np.linspace(self.c[0], self.c[1], 100)
+        chord_y_body = np.linspace(0, self.b[1]/2, 100)
+
+        chord_wing_section = np.linspace(self.c[1], self.c[2], 100)
+        chord_y_wing = np.linspace(0, self.b[2]/2 - self.b[1]/2, 100)
+
+        #Step2 (estimates x according to sweep)
+        x_body = 0.25 * self.c[0] + np.tan(self.sweep[0]) * chord_y_body + 0.1 * chord_body_section
+        x_wing = (0.25 * self.c[0] + np.tan(self.sweep[1]) * self.b[1]/2) + np.tan(self.sweep[1]) * chord_y_wing + 0.1 * chord_wing_section
+
+
+
+        Structure_mass=0.26*self.MTOW
+        Wing_mass=0.29*self.Structure_mass
+        Body_mass=0.54*self.Structure_mass
+        Landing_gear_mass=0.108*self.Structure_mass
+        Pylon_mass=0.035*self.Structure_mass
+        Vertical_tail_mass=0.024*self.Structure_mass
+
+        V_tot_structure_body=np.trapz(chord_body_section**2, chord_y_body)
+        V_tot_structure_wing=np.trapz(chord_wing_section**2, chord_y_wing)
+        structure_density_wing=(Wing_mass)/V_tot_structure_wing
+        structure_density_body=(Body_mass)/V_tot_structure_body
+
+        xx_function_wing=structure_density_wing*chord_wing_section**2*chord_y_body**2
+        xx_function_body=structure_density_body*chord_body_section**2*chord_y_body**2
+
+        yy_function_wing=structure_density_wing*chord_wing_section**2*x_wing**2
+        yy_function_body=structure_density_body*chord_body_section**2*x_body**2
+
+        zz_function_wing=structure_density_wing*chord_wing_section**2*(x_wing**2+chord_y_wing**2)
+        zz_function_body=structure_density_body*chord_body_section**2*(x_body**2+chord_y_body**2)
+
+        Total_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)
+
+        
 
     #def vert_stab(self):
     #    #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in
@@ -303,7 +342,7 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self,plane,Taper,Sweep,Area,coords_bot,min_dy,eta,SrS,Sideslip_at_enginefail,T_engine, d_engine, A_v=2,
+    def __init__(self,plane,Taper,Sweep,Area,min_dy,eta,SrS,Sideslip_at_enginefail,T_engine, d_engine, tail_number,A_v=2,
                  thickness_v=0.12,def_rudder_emergency = 20,Cl_alpha=2*np.pi, sweep_half_v=0):
         self.A_v=A_v
         self.Taper_v=Taper
@@ -313,7 +352,7 @@ class Tail:
         self.min_dy=min_dy
         self.b_i=b_i
 
-        self.tailnumber=tailnumber
+        self.tailnumber=tail_number
         self.Tail_positioning()
         self.eta = eta #How much of the span does the rudder take
         self.SrS= SrS #Part of surface used for the rudder (Roskam 2 for first iteration)

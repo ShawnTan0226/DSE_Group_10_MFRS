@@ -218,7 +218,6 @@ class AerodynamicProperties:
         self.C_Y_b =  self.C_Y_b_w + self.C_Y_b_v
 
     def calc_C_l_beta(self): #eq: 10.34 Roskam 6
-        self.calc_C_Y_beta()
 
         print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 393)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))#Use of sweep equivalent
         clbetacLwf = float(input("What is Cl_beta/CL from fig. 10.20"))
@@ -247,7 +246,7 @@ class AerodynamicProperties:
     #----------------Roll rate derivatives----------------
     def calc_C_Y_p(self): 
         #Should this be neglected?
-        self.C_Y_p=(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b*self.C_Y_b_v
+        self.C_Y_p=2*self.C_Y_b_v*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b
 
     def calc_C_l_p(self):
         Beta_Comp=(1-self.M**2)**0.5
@@ -272,7 +271,7 @@ class AerodynamicProperties:
         xbar_cbar=0.25
         C_n_p_CL=-1/6*(A+6*(A+np.cos(Sweep))*(xbar_cbar*np.tan(Sweep)/A+np.tan(Sweep)**2/12))/(A+4*np.cos(Sweep))
         self.C_n_p_w=C_n_p_CL*self.C_L+Cnp_eps*self.plane.twist[-1]
-        self.C_n_p_v=-2/self.b**2((self.l_v*np.cos(self.aoa)-self.z_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+        self.C_n_p_v=-2/self.b**2((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
         self.C_n_p=self.C_n_p_w+self.C_n_p_v
 
     #----------------Yaw rate derivatives----------------
@@ -302,7 +301,7 @@ class AerodynamicProperties:
         self.C_l_r_epsilon = float(input("From figure 10.42 (page 430) in Roskam 6, provide slope value (OTHERWISE: assume 0.125 for A=6, Taper=0.26 and sweep=38"))
 
         self.C_l_r_dflaps = float(input("From figure 10.43 (page 431) in Roskam 6, provide slope value (OTHERWISE: assume 0 since dflaps is 0"))
-        self.dflaps = 0 #Assume no flaps
+        self.dflaps = 0 #Assume no flaps 
         self.aoa_dflaps = 0 #assume 0 because flaps is 0 but technically
 
 
@@ -312,7 +311,7 @@ class AerodynamicProperties:
         self.lv = self.x_ac_v - self.plane.x_cg
         self.zv = self.z_ac_v - self.z_cg
         self.C_l_r_v = -(2/(self.plane.b[-1]**2)) * (self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa)) * \
-                       (self.zv * np.cos(self.aoa) - self.lv * np.sin(self.aoa) * self.C_Y_b_v)
+                       (self.zv * np.cos(self.aoa) - self.lv * np.sin(self.aoa)) * self.C_Y_b_v
 
         self.C_l_r = self.C_l_r_w + self.C_l_r_v
 

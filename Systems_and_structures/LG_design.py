@@ -1,7 +1,7 @@
 import numpy as np
 
 class LandingGear:
-    def __init__(self, xcg, span, sweep_QC, MTOW, chord_tip, chord_root, MAC, dihedral):
+    def __init__(self, xcg, span, sweep_QC, MTOW, chord_tip, chord_root, MAC, dihedral=0, pusher=False):
         self.xcg = xcg
         self.span = span
         self.sweep = sweep_QC
@@ -10,6 +10,9 @@ class LandingGear:
         self.chord_root = chord_root
         self.MAC = MAC
         self.dihedral = dihedral
+
+        self.positioning()
+        self.clearance(pusher)
 
     def positioning(self):
         # Assumed initial MLG position
@@ -31,14 +34,14 @@ class LandingGear:
         self.load_NLG = (self.MTOW * self.dis_x_cg_MLG) / (self.dis_x_cg_NLG + self.dis_x_cg_MLG)
         self.load_MLG = (self.MTOW * self.dis_x_cg_NLG) / (n_s * (self.dis_x_cg_NLG + self.dis_x_cg_MLG))
 
-    def clearance(self, pusher = False):
+    def clearance(self, pusher):
         # Longitudinal clearance
         self.ang_lon = np.radians(15)   # degrees
 
         # Assess the clearance in case of TE pusher engines, most outer engines then critical
         pos_y_engine = self.span / 2
         pos_x_engine = self.xcg + self.dis_x_cg_wingtip
-        prop_radius = 0.5
+        prop_radius = 1.25
         if pusher:
             # Option if wingtip is constraining
             self.height_MLG_tip = np.tan(self.ang_lon) * (self.dis_x_cg_wingtip - self.dis_x_cg_MLG) - np.tan(self.dihedral) * self.span/2
@@ -67,7 +70,7 @@ class LandingGear:
 
 
 
-drone = LandingGear(4.342, 16.4869908, np.radians(38), 6521.24, 1.550632326, 5.800, 3, 0)
-drone.positioning()
-drone.clearance()
-drone.loads()
+# drone = LandingGear(4.342, 16.4869908, np.radians(38), 6521.24, 1.550632326, 5.800, 3, 0)
+# drone.positioning()
+# drone.clearance()
+# drone.loads()

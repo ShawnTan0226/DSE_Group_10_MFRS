@@ -68,7 +68,7 @@ class Flight_Envelope:
         plt.title("Flight envelope")
         plt.show()
 
-flight_envelope = Flight_Envelope(9000, 1.4, 1, 320, 400, 1.225, 2200)
+flight_envelope = Flight_Envelope(6521.24, 1.4, 4.87, 110, 1.4*110, 0.770816, 1412.107)
 flight_envelope.manoeuver_loads()
 flight_envelope.gust_loads()
 flight_envelope.plot()

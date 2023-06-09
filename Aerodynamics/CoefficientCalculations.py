@@ -14,7 +14,7 @@ from Plane import Plane
 
 #TODO:check all the inputs units
 class AerodynamicProperties:
-    def __init__(self,plane, tail,Steady_state, CmO_airfoil,MTOW=19900, h=5000 ,V=110): #Altitude in ft
+    def __init__(self,plane, tail,Steady_state, CmO_airfoil,MTOW=19900, twist = [0,1,1], h=5000 ,V=110): #Altitude in ft
         self.MTOW=MTOW
 
         self.plane=plane
@@ -54,9 +54,11 @@ class AerodynamicProperties:
 
         self.CmO_root_list = np.array([])
         self.CmO_tip_list = np.array([])
+        self.twist = twist
 
         self.atmos()
         self.aerodynamic_properties()
+
         for i in range(len(CmO_airfoil)):
             self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
             self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
@@ -146,9 +148,15 @@ class AerodynamicProperties:
 
     def calc_Cmac(self):
 
+        print("Considering taper ratios are {}, aspect ratios are {} and  ? (Roskam 6 - p. 304)")
+        dCmdEps1 = float(input('What is the dCmdEps of the inner section?'))
+        dCmdEps2 = float(input('What is the dCmdEps of the outer section?'))
+
+        self.dCmdEps = np.array([dCmdEps1,dCmdEps2])
+
         self.Cmac = ((self.plane.A_list * (np.cos(self.plane.sweep) ** 2)) /
                      (self.plane.A_list + 2 * np.cos(self.plane.sweep))) * (self.CmO_root_list + self.CmO_tip_list) / 2\
-                    + self.dCmdEps[1:]*self.twist[1:]
+                    + self.dCmdEps*self.twist[1:] #Roskam 6 p 302 eq. 8.70
         print("Cmac", self.Cmac)
 
     ### DYNAMIC STABILITY COEFFICIENTS ###
@@ -213,12 +221,8 @@ class AerodynamicProperties:
         self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
         self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
 
-        if self.tail.tailnumber == 1:
-            tn=1
-        else:
-            tn=2
         # Assuming bv/2ri>3.5-> kv=1
-        self.C_Y_b_v = -tn*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
+        self.C_Y_b_v = -1*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
         # Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
 
         #Final C_Y_beta

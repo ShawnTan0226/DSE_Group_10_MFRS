@@ -222,6 +222,9 @@ class Plane:
         2. Estimate x according to sweep (determine offset)
         3. Set up equation (include the offset (due to sweep) already for the x of each section)"""
         #Step1
+        self.lg_cg = lg_cg
+        self.pylon_cg = pylon_cg
+        self.vertical_tail_cg = vertical_tail_cg
 
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
         chord_y_body = np.linspace(0, self.b[1]/2, 100)
@@ -248,9 +251,7 @@ class Plane:
         total_length = max((0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]), self.c[0])
 
         
-        self.lg_cg = lg_cg*total_length
-        self.pylon_cg = pylon_cg*total_length
-        self.vertical_tail_cg = vertical_tail_cg*total_length
+
         #-----------COG DETERMINATION with all other subsystems------------------------------
         self.MTOW=MTOW
         total_structural_mass = 0.26 * MTOW
@@ -272,7 +273,7 @@ class Plane:
 
         #HERE: system mass is part of the bodywing mass
         body_wing_mass = total_structural_mass - pylon_mass - lg_mass - vertical_tail_mass - system_mass
-        body_wing_cg_relative = body_wing_cg / total_length
+        body_wing_cg_relative = body_wing_cg 
 
         #----------INPUT VARIABLES---------------
         # engine_mass = 1244.168
@@ -293,7 +294,7 @@ class Plane:
             vertical_tail_mass * vertical_tail_cg + engine_mass*engine_cg + battery_mass * battery_cg +
             payload_mass*payload_cg + system_mass * system_cg) / (MTOW)
 
-        x_cg = x_relative_cg * total_length
+        x_cg = x_relative_cg
 
         self.x_cg = x_cg
         self.x_relative_cg = x_relative_cg

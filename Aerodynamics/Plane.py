@@ -384,7 +384,7 @@ class Tail:
         self.plane = plane #plane pobject
         self.x_cg = x_cg
         self.coords_bot=plane.coords_bot
-        self.b_i=plane.b_i
+        self.b_i=plane.b[1]
 
         self.T_engine = T_engine #Max thrust of one engine
         self.d_engine = d_engine #distance of engine from centerline
@@ -393,7 +393,7 @@ class Tail:
         return (f(x + step) - f(x - step)) / (step * 2)
 
     def newtonRaphson(self, f, x0, e, N, h, relax):
-        print('\n\n*** NEWTON RAPHSON METHOD IMPLEMENTATION ***')
+        #print('\n\n*** NEWTON RAPHSON METHOD IMPLEMENTATION ***')
         i = 0
         step = 1
         flag = 1
@@ -402,15 +402,15 @@ class Tail:
             # if g(f,x0,h) == 0.0:
             #     print('Divide by zero error!')
             #     break
-            print('x0---', x0)
-            print('value---', f(x0))
-            print('grad---', self.gradient(f, x0, h))
+            #print('x0---', x0)
+            #print('value---', f(x0))
+            #print('grad---', self.gradient(f, x0, h))
             x1 = x0 * relax + (x0 - f(x0) / (self.gradient(f, x0, h))) * (1 - relax)
             # print('Iteration-%d, x1 = %0.6f and f(x1) = %0.6f' % (step, x1, f(x1)))
             x0 = x1
             step = step + 1
             newvalue = f(x1)
-            print(newvalue)
+            #print(newvalue)
             # if g(f,buildingno,x0,h)<0:
             #     x1=x1/relax
 
@@ -421,13 +421,13 @@ class Tail:
                 flag = 2
                 condition = False
             i += 1
-            print('x1---', x1)
+            #print('x1---', x1)
 
         if flag == 1:
-            print('\nRequired root is: %0.8f', x1)
+            #print('\nRequired root is: %0.8f', x1)
             return x0, i, x1
         else:
-            print('\nNot Convergent.')
+            #print('\nNot Convergent.')
             return 1000, i, "No solution found"
 
     def calc_flap_span_factor(self):
@@ -458,7 +458,7 @@ class Tail:
         self.rudder_effectiveness = float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
 
     def calc_deltacl_rudder(self):
-
+        self.calc_CL_alpha_w()
         self.calc_flap_span_factor()
         self.calc_delta_cl()
         self.calc_rudder_effectiveness()
@@ -491,10 +491,9 @@ class Tail:
 
     def tail_sizing(self):
         self.calc_deltacl_rudder()
-        self.calc_CL_alpha_w()
 
         #Body
-        self.S_v_b = self.newtonRaphson(self.f,30,0.01,10000,0.00010,1)
+        self.S_v_b = self.newtonRaphson(self.f,30,0.01,10000,0.00010,1)[2]
 
         #Wingtips
         cr_t = self.plane.c[-1]

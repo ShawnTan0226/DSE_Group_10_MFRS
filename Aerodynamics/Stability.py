@@ -4,6 +4,7 @@ class Stab:
         self.plane=plane
         self.Coeff=Coefficients
         self.V0=plane.V
+
         self.muc=MTOW/(Coefficients.rho*plane.S*plane.MAC)
         self.mub=MTOW/(Coefficients.rho*plane.S*plane.b_tot)
 

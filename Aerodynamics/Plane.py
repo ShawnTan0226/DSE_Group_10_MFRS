@@ -222,6 +222,7 @@ class Plane:
         2. Estimate x according to sweep (determine offset)
         3. Set up equation (include the offset (due to sweep) already for the x of each section)"""
         #Step1
+
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
         chord_y_body = np.linspace(0, self.b[1]/2, 100)
 
@@ -246,6 +247,10 @@ class Plane:
         #----------------total length of drone according to sweep----------
         total_length = max((0.25 * self.c[0] + np.tan(self.sweep[0]) * 0.5*self.b[1] + np.tan(self.sweep[1]) * (0.5*self.b[2] - 0.5*self.b[1]) + 0.75 * self.c[2]), self.c[0])
 
+        
+        self.lg_cg = lg_cg*total_length
+        self.pylon_cg = pylon_cg*total_length
+        self.vertical_tail_cg = vertical_tail_cg*total_length
         #-----------COG DETERMINATION with all other subsystems------------------------------
         self.MTOW=MTOW
         total_structural_mass = 0.26 * MTOW
@@ -296,7 +301,11 @@ class Plane:
 
         return x_cg
     
-    def calculate_MOI(self):
+    def calculate_MOI(self,z_cg_lg,z_cg_pylon,z_cg_vtail):
+        self.z_cg_lg = z_cg_lg
+        self.z_cg_pylon = z_cg_pylon
+        self.z_cg_vtail = z_cg_vtail
+
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
         chord_y_body = np.linspace(0, self.b[1]/2, 100)
 
@@ -304,24 +313,26 @@ class Plane:
         chord_y_wing = np.linspace(0, self.b[2]/2 - self.b[1]/2, 100)
 
         #Step2 (estimates x according to sweep)
-        x_body = 0.25 * self.c[0] + np.tan(self.sweep[0]) * chord_y_body + 0.1 * chord_body_section
+        x_body = 0.25 * self.c[0] + np.tan(self.sweep[0]) * chord_y_body + 0.1 * chord_body_section-self.x_cg
         x_wing = (0.25 * self.c[0] + np.tan(self.sweep[1]) * self.b[1]/2) + np.tan(self.sweep[1]) * chord_y_wing + 0.1 * chord_wing_section
 
 
 
-        Structure_mass=0.26*self.MTOW
+        self.Structure_mass=0.26*self.MTOW
         Wing_mass=0.29*self.Structure_mass
         Body_mass=0.54*self.Structure_mass
         Landing_gear_mass=0.108*self.Structure_mass
         Pylon_mass=0.035*self.Structure_mass
         Vertical_tail_mass=0.024*self.Structure_mass
 
+        chord_y_wing=chord_y_wing+self.b[1]/2
+
         V_tot_structure_body=np.trapz(chord_body_section**2, chord_y_body)
         V_tot_structure_wing=np.trapz(chord_wing_section**2, chord_y_wing)
         structure_density_wing=(Wing_mass)/V_tot_structure_wing
         structure_density_body=(Body_mass)/V_tot_structure_body
 
-        xx_function_wing=structure_density_wing*chord_wing_section**2*chord_y_body**2
+        xx_function_wing=structure_density_wing*chord_wing_section**2*chord_y_wing**2
         xx_function_body=structure_density_body*chord_body_section**2*chord_y_body**2
 
         yy_function_wing=structure_density_wing*chord_wing_section**2*x_wing**2
@@ -330,9 +341,13 @@ class Plane:
         zz_function_wing=structure_density_wing*chord_wing_section**2*(x_wing**2+chord_y_wing**2)
         zz_function_body=structure_density_body*chord_body_section**2*(x_body**2+chord_y_body**2)
 
-        Total_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)
 
-        
+        self.I_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(xx_function_body, chord_y_body)+Landing_gear_mass*z_cg_lg**2+Vertical_tail_mass*z_cg_vtail**2+Pylon_mass*z_cg_pylon**2
+        self.I_yy=np.trapz(yy_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)+Landing_gear_mass*((self.lg_cg-self.x_cg)**2+z_cg_lg**2)+Vertical_tail_mass*((self.vertical_tail_cg-self.x_cg)**2+self.z_cg_pylon**2)+Pylon_mass*((self.pylon_cg-self.x_cg)**2+self.z_cg_pylon**2)
+        self.I_zz=np.trapz(zz_function_wing, chord_y_wing)+np.trapz(zz_function_body, chord_y_body)+Landing_gear_mass*(self.lg_cg-self.x_cg)**2+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)**2+Pylon_mass*(self.pylon_cg-self.x_cg)**2
+        self.I_xz=Landing_gear_mass*(self.lg_cg-self.x_cg)*z_cg_lg+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)*z_cg_vtail+Pylon_mass*(self.pylon_cg-self.x_cg)*z_cg_pylon
+
+
 
     #def vert_stab(self):
     #    #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in

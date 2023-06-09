@@ -4,12 +4,13 @@ import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 #TODO: Implement multiple airfoil
 class Plane:
-    def __init__(self,Cri,taper,sweep,b,twist,planename='Twist',h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
+    def __init__(self,Cri,taper,sweep,b,twist=[0,0],dihedral=0,planename='Main.csv',ip=0,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
         #Plane object has n sections
         self.c=np.array([Cri]) #array of chord [m] form: [Middle c,c1,c2,c3,...,cn]
         self.taper = np.array(taper) #array of taper ratio form: [taper1,taper2,taper3,...,tapern]
         self.sweep = np.array(np.deg2rad(sweep)) #array of sweep angle [rad] form: [sweep1,sweep2,sweep3,...,sweepn]
         self.twist = np.array(np.deg2rad(twist))
+        self.dihedral = np.deg2rad(dihedral)
         self.b = np.concatenate(([0],b)) #array of span [m] form: [0,b1,b2,b3,...,bn]
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
         
@@ -19,6 +20,7 @@ class Plane:
         self.h=h
 
         self.planename=planename
+        self.ip=ip
 
         self.MAC_list=np.array([])
         self.x_list=np.array([])
@@ -70,10 +72,10 @@ class Plane:
     def plot_plane(self):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
-        plt.plot(np.concatenate((self.y_list,self.y_list[::-1],[self.y_list[0]])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1],[self.x_list[0]-0.25*self.MAC_list[0]])),color='red')
-        plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
-        plt.scatter(self.y_list,self.x_list)
-        plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
+        # plt.plot(np.concatenate((self.y_list,self.y_list[::-1],[self.y_list[0]])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1],[self.x_list[0]-0.25*self.MAC_list[0]])),color='red')
+        # plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
+        # plt.scatter(self.y_list,self.x_list)
+        # plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
         plt.gca().invert_yaxis()
         plt.show()
 
@@ -309,6 +311,8 @@ class Tail:
         self.coords_bot=coords_bot
         self.min_dy=min_dy
         self.b_i=b_i
+
+        self.tailnumber=tailnumber
         self.Tail_positioning()
     def Tail_positioning(self):
         if self.coords_bot[-1]>self.coords_bot[0] and self.b_i<self.min_dy:
@@ -327,6 +331,19 @@ class Tail:
 
 
 
+class Trim:
+    def __init__(self,CL,CD,T_c,V,aoa,theta=0,q=0,beta=0,phi=0,p=0,r=0):
+        self.CL=CL
+        self.CD=CD
+        self.T_c=T_c
+        self.V=V
+        self.aoa=aoa
+        self.theta=theta
+        self.q=q
+        self.beta=beta
+        self.phi=phi
+        self.p=p
+        self.r=r
 
 
 # taper_list = [0.267,0.34]

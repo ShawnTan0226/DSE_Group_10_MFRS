@@ -461,7 +461,7 @@ class Tail:
         self.zv = -(b)*(MAC-cr)/(cr-self.taper_v*cr)
 
         self.sweep_v = np.arctan((0.25*cr-0.25*MAC)/(self.zv))
-        self.x_v = np.tan(self.sweep_v)*zv
+        self.x_v = np.tan(self.sweep_v)*self.zv
 
     def calc_lv(self,S_v):#Body
         self.calc_xv(S_v)
@@ -485,7 +485,7 @@ class Tail:
         cr_t = self.plane.c[-1]
         self.MAC_wt = 2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
 
-        self.l_wt = -0.75 * cr + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
+        self.l_wt = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
         self.S_v_wt = self.T_engine * self.d_engine/2/(0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * self.l_wt)
 
 
@@ -501,7 +501,7 @@ class Tail:
             self.S_v = 2*np.copy(self.S_v_wt)
             b = (self.S_v_wt/2/self.MAC_wt)
             self.x_tail = self.l_wt + self.x_cg
-            self.z_tail = -(b)*(self.MAC_wt-cr)/(cr-self.taper_v*cr)
+            self.z_tail = -(b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
             self.A_v = b**2/self.S_v
             print("Vertical stabiliser on Wingtips".format(self.min_dy))
 

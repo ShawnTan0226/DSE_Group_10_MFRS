@@ -27,7 +27,8 @@ class AerodynamicProperties:
 
         self.x_tail=self.tail.x_tail
         self.z_tail=self.tail.z_tail
-        self.S_tail=self.tail.S_tail
+
+
         self.Cl_alpha_v=self.tail.C_L_alpha_v
         self.sweep_half_v=self.tail.sweep_half_v
         self.Av=self.tail.A_v
@@ -288,9 +289,6 @@ class AerodynamicProperties:
     def calc_C_Y_beta(self):
         #wing
         self.C_Y_b_w = -0.00573 * self.dihedral  # dihedral in deg
-
-        print("Are you training ")
-        cz=float(input())
 
         #single vertical tail
         constant = 0.724 + 3.06*((self.Sv/self.plane.S)/(1+np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A #

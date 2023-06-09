@@ -51,7 +51,6 @@ class Plane:
         for i in self.taper:
             self.c=np.concatenate((self.c, [i*self.c[-1]]))
             nextoffset=self.offset[-1]+np.tan(self.sweep[count])*(self.b[count+1]-self.b[count])/2+0.25*self.c[-2]-0.25*self.c[-1]
-            print('sweep',self.sweep[count])
             self.offset=np.concatenate((self.offset, [nextoffset]))
             self.S_list=np.concatenate((self.S_list,[(self.c[-1]+self.c[-2])/2*(self.b[count+1]-self.b[count])]))
             count+=1

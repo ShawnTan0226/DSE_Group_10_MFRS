@@ -293,25 +293,96 @@ class Plane:
 
         return x_cg
 
-    def vert_stab(self):
-        #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in
-        # such a way that the moment arm is maximised
-        # C_v_t =
-        # #Single
-        # self.asd
-        x=0
+    #def vert_stab(self):
+    #    #As the moment arm is limiting on BWB without tail, the twin vert stab will be placed in
+    #    # such a way that the moment arm is maximised
+    #    # C_v_t =
+    #    # #Single
+    #    # self.asd
+    #    x=0
 class Tail:
-    def __init__(self,A,Taper,Sweep,Area,coords_bot,min_dy,b_i):
-        self.A_v=A
+    def __init__(self,plane,Taper,Sweep,Area,coords_bot,min_dy,eta,SrS,Sideslip_at_enginefail,T_engine, d_engine, A_v=2,
+                 thickness_v=0.12,def_rudder_emergency = 20,Cl_alpha=2*np.pi, sweep_half_v=0):
+        self.A_v=A_v
         self.Taper_v=Taper
         self.Sweep_v=Sweep
         self.S_v=Area
-        self.coords_bot=coords_bot
+        self.coords_bot=plane.coords_bot
         self.min_dy=min_dy
         self.b_i=b_i
         self.Tail_positioning()
+        self.eta = eta #How much of the span does the rudder take
+        self.SrS= SrS #Part of surface used for the rudder (Roskam 2 for first iteration)
+        self.thickness_v = thickness_v
+        self.df_deg = def_rudder_emergency
+        self.df_rad = np.deg2rad(def_rudder_emergency)
+        self.cl_alpha_theory = Cl_alpha
+        self.sweep_half_v = sweep_half_v
+        self.beta = Sideslip_at_enginefail
+
+        self.T_engine = T_engine #Max thrust of one engine
+        self.d_engine = d_engine #distance of engine from centerline
+
+
+    def calc_flap_span_factor(self):
+        print("Considering that the flap span is {} ?".format(self.eta))
+        self.Kb= float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
+
+    def calc_delta_cl(self):
+        # Calculates the flap chord/ average chord form Sr/S
+        self.cfc = self.SrS / self.eta  # Assumes average chord and sweep of zero
+
+        print("Considering that the cf/c is {} and flap deflection {} deg".format(self.cfc, self.df_deg))
+        self.k_theory = float(input('What is k (Roskam 6 - p.228 - fig. 8.13)'))
+
+        print("Considering that the cf/c is {} and t/c is {}".format(self.cfc, self.thickness_v))
+        self.cl_delta_theory = float(input('What is cl_delta_theory (Roskam 6 - p.228 - fig. 8.14)'))
+
+        # We assume Cl_alpha_theory = Cl_alpha
+
+        self.delta_cl = self.df_rad * self.cl_delta_theory * self.k_theory
+
+    def calc_CL_alpha_w(self):
+        #Assumed ellipitical lift distribution
+        self.CL_alpha_w = 2*np.pi/(1+2*np.pi/np.pi/self.A_v)
+
+    def calc_rudder_effectiveness(self):
+        print("Considering that the cf/c is {} and A is {}".format(self.cfc, self.A_v))
+        self.rudder_effectiveness = float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
+
+    def calc_deltacl_rudder(self):
+
+        self.calc_flap_span_factor()
+        self.calc_delta_cl()
+        self.calc_rudder_effectiveness()
+
+        self.delta_cL_rudder = self.Kb*self.delta_cl*self.CL_alpha_w/self.cl_alpha_theory*self.rudder_effectiveness
+
+    def taper_v(self):
+
+    def dimension(self):
+        #distance cg to end of
+
+    def tail_sizing(self):
+        self.calc_deltacl_rudder()
+
+        #Wingtips
+        c[-1]
+
+        self.S_v = (self.d_engine*self.T_engine)
+
+
+
+
+
+
+
+
+
+
+
     def Tail_positioning(self):
-        if self.coords_bot[-1]>self.coords_bot[0] and self.b_i<self.min_dy:
+        if self.coords_bot[-1]>self.coords_bot[0] and self.plane.b[1]<self.min_dy:
             self.x_v_end=self.coords_bot[-1]
         else:
             self.x_v_end=(self.coords_bot[1]-self.coords_bot[0])/(self.b_i)*self.min_dy+self.coords_bot[0]

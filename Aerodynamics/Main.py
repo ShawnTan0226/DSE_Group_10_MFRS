@@ -1,5 +1,6 @@
 from Plane import Plane
 from CoefficientCalculations import AerodynamicProperties
+from Systems_and_structures.LG_design import LandingGear
 
 import sys
 import os

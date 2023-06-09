@@ -14,7 +14,7 @@ from Plane import Plane
 
 #TODO:check all the inputs units
 class AerodynamicProperties:
-    def __init__(self,plane, tail,Steady_state, CmO_airfoil, h=5000 ,V=110): #Altitude in ft
+    def __init__(self,plane, tail,Steady_state, CmO_airfoil, twist = [0,1,1], h=5000 ,V=110): #Altitude in ft
         self.plane=plane
         self.tail=tail
         self.Steady_state=Steady_state
@@ -48,9 +48,11 @@ class AerodynamicProperties:
 
         self.CmO_root_list = np.array([])
         self.CmO_tip_list = np.array([])
+        self.twist = twist
 
         self.atmos()
         self.aerodynamic_properties()
+
         for i in range(len(CmO_airfoil)):
             self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
             self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
@@ -140,9 +142,15 @@ class AerodynamicProperties:
 
     def calc_Cmac(self):
 
+        print("Considering taper ratios are {}, aspect ratios are {} and  ? (Roskam 6 - p. 304)")
+        dCmdEps1 = float(input('What is the dCmdEps of the inner section?'))
+        dCmdEps2 = float(input('What is the dCmdEps of the outer section?'))
+
+        self.dCmdEps = np.array([dCmdEps1,dCmdEps2])
+
         self.Cmac = ((self.plane.A_list * (np.cos(self.plane.sweep) ** 2)) /
                      (self.plane.A_list + 2 * np.cos(self.plane.sweep))) * (self.CmO_root_list + self.CmO_tip_list) / 2\
-                    + self.dCmdEps[1:]*self.twist[1:]
+                    + self.dCmdEps*self.twist[1:] #Roskam 6 p 302 eq. 8.70
         print("Cmac", self.Cmac)
 
     ### DYNAMIC STABILITY COEFFICIENTS ###

@@ -23,10 +23,17 @@ m_system=0
 Wingloading=1412
 Volume=6.5
 
+#Tail class inputs
+eta =0.25
+SrS =0.36 # based on cessna citation 500 - Roskam
+T_engine = 5000 #[N]
+d_engine = 2 #[m] distance of 1 engine from centerline
+
 
 Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,Volume,0.25,0.4)
 plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
+tail = Tail(plane,eta,Srs,T_engine,d_engine,x_cg)
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 plt.scatter([LG.track_width_MLG/2,0,0],[LG.pos_x_MLG,-LG.pos_x_NLG,x_cg])
 plane.plot_plane()
@@ -42,6 +49,7 @@ x_cg_batprop=0.281*plane.b_tot/2
 x_cg_system=0.281*plane.b_tot/2
 
 x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batprop,x_cg_batprop,m_payload,x_cg_payload,m_system,x_cg_system,MTOW)
+tail = Tail(plane,eta,Srs,T_engine,d_engine,x_cg)
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 plt.scatter([LG.track_width_MLG/2,0,0],[LG.pos_x_MLG,-LG.pos_x_NLG,x_cg])
 plane.plot_plane()
@@ -50,7 +58,7 @@ plane.xflrvelues()
 plane.calculate_MOI(0,0,0)
 
 trim=Trim(0.5, 0.02, 0.02,110,5)
-tail=Tail(2,0.4,0,3,plane.coords_bot,2,plane.b[1])
+
 
 
 

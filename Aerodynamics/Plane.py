@@ -357,12 +357,11 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self,plane,Sweep,eta,SrS,T_engine, d_engine,x_cg = 2,taper_v=0.4,A_v=2,
+    def __init__(self,plane,eta,SrS,T_engine, d_engine,x_cg = 2,taper_v=0.4,A_v=2,
                  thickness_v=0.12,def_rudder_emergency = 20, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225):
         self.A_v=A_v
         self.Taper_v=taper_v
-        self.Sweep_v=Sweep
         self.V_s = V_stall
         self.density = density
 
@@ -507,11 +506,11 @@ class Tail:
         #Compare best option
         if self.S_v_b>self.S_v_wt:
             self.S_v = 2*np.copy(self.S_v_b)
-            self.x_tail = self.x_v
+            self.x_tail = self.lv+self.x_cg
             self.z_tail = self.zv
             self.A_v = self.A_v
             print("Vertical stabiliser on Body section with dy = {} ".format(self.min_dy))
-
+            self.x_v_cg = self.x_tail
         else:
             self.S_v = 2*np.copy(self.S_v_wt)
             b = (self.S_v_wt/2/self.MAC_wt)

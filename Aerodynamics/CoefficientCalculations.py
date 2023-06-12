@@ -171,7 +171,7 @@ class AerodynamicProperties:
 
     def calc_Cmac(self):
 
-        print("Considering taper ratios are {}, aspect ratios are {} and  ? (Roskam 6 - p. 304)")
+        print("Considering taper ratios are {}, aspect ratios are {} and quarter chord sweep angle are {} ? (Roskam 6 - p. 304)".format(self.plane.taper, self.plane.A_list, np.rad2deg(self.plane.sweep)))
         dCmdEps1 = float(input('What is the dCmdEps of the inner section?'))
         dCmdEps2 = float(input('What is the dCmdEps of the outer section?'))
 
@@ -264,7 +264,7 @@ class AerodynamicProperties:
         #single vertical tail
         constant = 0.724 + 3.06*((self.Sv/self.plane.S)/(1+np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A #
         print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386)")
-        AvfAv=float(input('Avf/Av (if you dont know assume 1'))
+        AvfAv=float(input('Avf/Av (if you dont know assume 1)'))
         Av_hfAvf = float(input('Avf/Av (if you dont know assume 1.2)'))
         Kvh = float(input('Kvh (if you dont know assume 1.2)'))
         self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
@@ -296,6 +296,8 @@ class AerodynamicProperties:
 
         #Vertical Tail
         self.C_l_beta_v = self.C_Y_b_v*(self.z_v*np.cos(self.aoa) - self.l_v*np.sin(self.aoa))/self.plane.b[-1] #Roskam 6 eq. 10.34
+
+        self.C_l_beta = self.C_l_beta_v+self.C_l_beta_wf
 
     def calc_C_n_beta(self): #eq: 10.35 Roskam 6
         self.C_n_beta=-self.C_Y_b_v*(self.l_v*np.cos(self.aoa) + self.z_v*np.sin(self.aoa))/self.plane.b[-1]

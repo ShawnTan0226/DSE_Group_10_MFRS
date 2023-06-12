@@ -1,6 +1,5 @@
 from Plane import Plane, Trim, Tail
 from CoefficientCalculations import AerodynamicProperties
-
 import sys
 import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -30,8 +29,8 @@ Volume=6.5
 #Tail class inputs
 eta =1
 SrS =0.36 # based on cessna citation 500 - Roskam
-T_engine = 5000 #[N]
-d_engine = 2 #[m] distance of 1 engine from centerline
+T_engine = 5600 #[N]
+d_engine = 3 #[m] distance of 1 engine from centerline
 
 
 Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,0.4)

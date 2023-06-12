@@ -307,16 +307,24 @@ class AerodynamicProperties:
 
         self.C_l_beta = self.C_l_beta_v+self.C_l_beta_wf
 
+        self.coefficients['C_l_beta'] = self.C_l_beta
+
     def calc_C_n_beta(self): #eq: 10.35 Roskam 6
         self.C_n_beta=-self.C_Y_b_v*(self.l_v*np.cos(self.aoa) + self.z_v*np.sin(self.aoa))/self.plane.b[-1]
 
+        self.coefficients['C_n_beta'] = self.C_n_beta
+
     def calc_C_Y_betadot(self):
         self.C_Y_betadot = 0 #Usually neglected for high AR
+
+        self.coefficients['C_Y_betadot'] = self.C_Y_betadot
 
     #----------------Roll rate derivatives----------------
     def calc_C_Y_p(self): 
         #Should this be neglected?
         self.C_Y_p=2*self.C_Y_b_v*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b
+
+        self.coefficients['C_Y_p'] = self.C_Y_p
 
     def calc_C_l_p(self):
         Beta_Comp=(1-self.M**2)**0.5
@@ -346,6 +354,8 @@ class AerodynamicProperties:
         self.C_n_p_v=-2/self.b**2 * ((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
         self.C_n_p=self.C_n_p_w+self.C_n_p_v
 
+        self.coefficients["C_n_p"]=self.C_n_p
+
     #----------------Yaw rate derivatives----------------
     def calc_C_Y_r(self):
         # self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
@@ -356,6 +366,8 @@ class AerodynamicProperties:
         # self.calc_C_Y_beta()
 
         self.C_Y_r = -2 * self.C_Y_beta_v * (self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa)) / self.plane.b[-1]
+
+        self.coefficients['C_Y_r'] = self.C_Y_r
 
 
     def calc_C_l_r(self):
@@ -387,6 +399,8 @@ class AerodynamicProperties:
 
         self.C_l_r = self.C_l_r_w + self.C_l_r_v
 
+        self.coefficients['C_l_r'] = self.C_l_r
+
 
     
     def calc_C_n_r(self):
@@ -401,6 +415,8 @@ class AerodynamicProperties:
         self.C_n_r_v = (2/(self.plane.b[-1]**2)) * ((self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa))**2) * self.C_Y_b_v
 
         self.C_n_r = self.C_n_r_w + self.C_n_r_v
+
+        self.coefficients['C_n_r'] = self.C_n_r
 
     #def Cmdot(self): #Make CLalpha_h equal to zero if there is no tail, tail is a straight conventional wing at wingtips
     #    self.eta_h =

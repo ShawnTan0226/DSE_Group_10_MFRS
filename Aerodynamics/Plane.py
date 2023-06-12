@@ -358,8 +358,8 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self,plane,eta,SrS,T_engine, d_engine,x_cg = 2,taper_v=0.4,A_v=2,
-                 thickness_v=0.12,def_rudder_emergency = 20, beta_max=30, Cl_alpha=2*np.pi,
+    def __init__(self, plane, eta, SrS, T_engine, d_engine, x_cg, taper_v=0.4, A_v=2,
+                 thickness_v=0.12, def_rudder_emergency = 10, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225):
         self.A_v=A_v
         self.Taper_v=taper_v
@@ -379,7 +379,7 @@ class Tail:
         self.sweep_half_v = sweep_half_v
 
         self.beta_max_rad = np.deg2rad(beta_max)#Make sure to add safety factor
-        self.beta_engine_fail = self.beta_max_rad*0.8
+        self.beta_engine_fail = self.beta_max_rad*0.2
 
         self.plane = plane #plane pobject
         self.x_cg = x_cg
@@ -481,43 +481,52 @@ class Tail:
     def calc_lv(self,S_v):#Body
         self.calc_xv(S_v)
         self.x_v_end_body = (self.coords_bot[1] - self.coords_bot[0]) / (self.b_i) * self.min_dy + self.coords_bot[0]
+        print(S_v)
         cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
-        self.lv = self.x_v_end_body-self.x_cg-cr+self.x_v
+        self.lv =self.x_v_end_body-self.x_cg-cr+self.x_v
 
     def f(self,S_v):
         self.calc_lv(S_v)  # keep in the loop
-        f = 2* 0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.lv - self.T_engine * self.d_engine
+        f = - self.T_engine * self.d_engine + 2* 0.5 * (self.CL_alpha_w * self.beta_engine_fail + self.delta_cL_rudder
+                                                        *(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * S_v * self.lv
         return f
 
     def tail_sizing(self):
         self.calc_deltacl_rudder()
 
         #Body
-        self.S_v_b = self.newtonRaphson(self.f,30,0.01,10000,0.00010,1)[2]
+        self.S_v_b = self.newtonRaphson(self.f,9,0.01,10000,0.00010,0.5)[2]
+        if self.S_v_b=="No solution found":
+            self.S_v_b = 10000
 
         #Wingtips
         cr_t = self.plane.c[-1]
         self.MAC_wt = 2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
 
         self.l_wt = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
-        self.S_v_wt = self.T_engine * self.d_engine/2/(0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * self.l_wt)
+        self.S_v_wt = self.T_engine * self.d_engine/(2*0.5 * (self.CL_alpha_w *self.beta_engine_fail + self.delta_cL_rudder
+                                                            *(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * self.l_wt)
 
+        print('b',self.S_v_b)
+        print('wt',self.S_v_wt)
+        print('d_engine', self.d_engine)
 
         #Compare best option
-        if self.S_v_b>self.S_v_wt:
-            self.S_v = 2*np.copy(self.S_v_b)
+        if self.S_v_b<self.S_v_wt:
+            self.S_v = 2*np.copy(self.S_v_b) #Surface for both wings
             self.x_tail = self.lv+self.x_cg
             self.z_tail = self.zv
             self.A_v = self.A_v
             print("Vertical stabiliser on Body section with dy = {} ".format(self.min_dy))
             self.x_v_cg = self.x_tail
+
         else:
-            self.S_v = 2*np.copy(self.S_v_wt)
+            self.S_v = 2*np.copy(self.S_v_wt) #Surface for both wingtips
             b = (self.S_v_wt/2/self.MAC_wt)
             self.x_tail = self.l_wt + self.x_cg
             self.z_tail = -(b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
             self.A_v = b**2/self.S_v
-            print("Vertical stabiliser on Wingtips".format(self.min_dy))
+            print("Vertical stabiliser on Wingtips, A is {}".format(self.A_v))
 
 
 

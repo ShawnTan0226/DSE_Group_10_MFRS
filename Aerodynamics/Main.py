@@ -1,4 +1,4 @@
-from Plane import Plane, Trim,Tail
+from Plane import Plane, Trim, Tail
 from CoefficientCalculations import AerodynamicProperties
 
 import sys
@@ -15,12 +15,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 MTOW=6521
-m_payload=2596.51
 m_struc=1695.5
 m_eng=400
 m_batprop=1829.21
+m_payload=2596.51
+m_batt=m_payload+m_batprop
+m_pl=0
 m_system=0
 Wingloading=1412
+V_prop=3
+V_pl=3.5
 Volume=6.5
 
 #Tail class inputs
@@ -30,32 +34,42 @@ T_engine = 5000 #[N]
 d_engine = 2 #[m] distance of 1 engine from centerline
 
 
-Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,Volume,0.25,0.4)
+Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,0.4)
 plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
-tail = Tail(plane,eta,SrS,T_engine,d_engine,x_cg)
-tail.tail_sizing()
+# tail = Tail(plane,eta,SrS,T_engine,d_engine,x_cg)
+# tail.tail_sizing()
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
-plt.scatter([LG.track_width_MLG/2,0,0],[LG.pos_x_MLG,-LG.pos_x_NLG,x_cg])
-plane.plot_plane()
+# plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue")
+# plt.scatter([0],[x_cg],color="red")
+# # plt.scatter([-tail.min_dy/2,tail.min_dy/2],[tail.x_tail,tail.x_tail],color="green")
+# plane.plot_plane()
 
 
-Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,Volume,0.25,LG.track_width_MLG/(plane.b_tot))
+Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(38),sweep_outer=np.deg2rad(30))
 plane=Batterysize.makeplane()
+x_cg_batt=Batterysize.battery_placement()
+
+print(x_cg_batt)
 
 x_cg_pylon=0.85*plane.b_tot/2
 x_cg_payload=0.281*plane.b_tot/2
 x_cg_eng=0.85*plane.b_tot/2
-x_cg_batprop=0.281*plane.b_tot/2
 x_cg_system=0.281*plane.b_tot/2
+x_cg_tail=plane.c[0]
 
-x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batprop,x_cg_batprop,m_payload,x_cg_payload,m_system,x_cg_system,MTOW)
-tail = Tail(plane,eta,SrS,T_engine,d_engine,x_cg)
-tail.tail_sizing()
-print(tail.S_v_wt)
+x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,x_cg_tail,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
+# tail = Tail(plane,eta,SrS,T_engine,d_engine,x_cg)
+# tail.tail_sizing()
+# print(tail.S_v_wt)
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
-plt.scatter([LG.track_width_MLG/2,0,0],[LG.pos_x_MLG,-LG.pos_x_NLG,x_cg])
+plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
+plt.scatter([0],[x_cg],color="red",label="CG")
+plt.scatter([plane.y_quarter],[plane.x_quarter],color="green",label="ac")
+plt.legend()
+# plt.scatter([-tail.min_dy/2,tail.min_dy/2],[tail.x_tail,tail.x_tail],color="green")
+print('LG height',LG.height_MLG)
 plane.plot_plane()
 plane.xflrvelues()
 

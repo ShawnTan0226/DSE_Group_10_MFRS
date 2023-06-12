@@ -140,7 +140,7 @@ class AerodynamicProperties:
         S_wet = np.pi*d**2/4+np.pi*d*l
         IF=0.036*(self.plane.MAC*d/self.plane.S)*(0.2)**2
         C_D_part = FF * C_f * S_wet / self.plane.S+IF
-        return C_D_part
+        return 2*C_D_part
 
     def define_C_D_0(self, laminar_frac):
         self.C_D_0 = 0
@@ -349,12 +349,6 @@ class AerodynamicProperties:
     #    self.eta_h =
     #    self.x_ac_h = self.plane.offset[-1]+ self.plane.c
     #    self.Cmdot = -2*self.CLalpha_h * self.eta_h *(self.plane.offset[-1]+ self.C
-
-
-    
-
-            
-    
 
 
     def help(self,option):

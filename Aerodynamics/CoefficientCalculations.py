@@ -43,6 +43,8 @@ class AerodynamicProperties:
         self.h=h
         self.V=Steady_state.V
         self.C_L=Steady_state.CL
+
+        self.C_l_alpha = 6.704
         
         directory_path = "./Xflr dat"
         file_list = []
@@ -100,9 +102,15 @@ class AerodynamicProperties:
         self.calc_C_X_q()
         self.calc_C_Z_q()
         self.calc_C_m_q()
-        print(self.coefficients)
         self.calc_Cmac()
+
         self.calc_C_Y_beta()
+        self.calc_C_Y_betadot()
+        self.calc_C_l_beta()
+        self.calc_C_n_beta()
+
+        self.calc_C_l_p()
+        print(self.coefficients)
 
 
     def calc_C_L_alpha(self):
@@ -264,9 +272,9 @@ class AerodynamicProperties:
         #single vertical tail
         constant = 0.724 + 3.06*((self.Sv/self.plane.S)/(1+np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A #
         print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386)")
-        AvfAv=float(input('Avf/Av (if you dont know assume 1)'))
-        Av_hfAvf = float(input('Avf/Av (if you dont know assume 1.2)'))
-        Kvh = float(input('Kvh (if you dont know assume 1.2)'))
+        AvfAv= 1 #float(input('Avf/Av (if you dont know assume 1)'))
+        Av_hfAvf = 1.2 # float(input('Avf/Av (if you dont know assume 1.2)'))
+        Kvh = 1.2 #float(input('Kvh (if you dont know assume 1.2)'))
         self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
         self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
 
@@ -280,16 +288,16 @@ class AerodynamicProperties:
     def calc_C_l_beta(self): #eq: 10.34 Roskam 6
 
         print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 393)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))#Use of sweep equivalent
-        clbetacLwf = float(input("What is Cl_beta/CL from fig. 10.20"))
+        clbetacLwf = -0.002 #float(input("What is Cl_beta/CL from fig. 10.20"))
 
         print("Considering: Aspect ratio {} and Taper ratio {}".format(self.plane.A,self.plane.taper_eq))
-        clbetacLA = float(input("What is Cl_beta/CL from fig. 10.23"))
+        clbetacLA = 0 #float(input("What is Cl_beta/CL from fig. 10.23"))
 
         print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 395)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))
-        clbetadihed = float(input("What is Cl_beta/dihedral from fig. 10.24"))
+        clbetadihed = -0.00017#float(input("What is Cl_beta/dihedral from fig. 10.24"))
 
         print("Considering:Aspect ratio {} and Taper ratio {} (Roskam 6 - p. 396)".format(self.plane.A,self.plane.taper_eq))
-        x = float(input("What is the dCL/(epsilon*tan(sweep)) from fig 10.26"))
+        x = -0.000025#float(input("What is the dCL/(epsilon*tan(sweep)) from fig 10.26"))
 
         #Wing-fuselage
         self.C_l_beta_wf = 57.3*(self.C_L*(clbetacLwf*1*1 + clbetacLA) + self.dihedral*clbetadihed + x * self.plane.twist[-1] * np.tan(self.plane.sweep_eq))#Assumed no compressibility correction, fuselage correction =1 since no fuselage
@@ -312,18 +320,20 @@ class AerodynamicProperties:
 
     def calc_C_l_p(self):
         Beta_Comp=(1-self.M**2)**0.5
-        Gamma_b=np.arctan(np.tan(self.plane.sweep_eq)/Beta_Comp)
-        k=self.c_l_alpha*Beta_Comp/(2*np.pi) 
+        Gamma_b=np.rad2deg(np.arctan(np.tan(self.plane.sweep_eq)/Beta_Comp))
+        k=self.C_l_alpha*Beta_Comp/(2*np.pi)
         BA_k=Beta_Comp*self.plane.A/k
         print("Gamma_b =",Gamma_b,"BA_k =",BA_k,"Taper =",self.plane.taper_eq,"What is BetaClp/k? (Roskam 6 - p. 418)")
         BetaClp_k=float(input('BetaClp/k ='))
-        print("A =",self.plane.A,"Quarter chord sweep(Lambda_1/4) =",self.plane.sweep_eq,"What is Clp/CL^2? (Roskam 6 - p. 420)")
+        print("A =",self.plane.A,"Quarter chord sweep(Lambda_1/4) =",np.rad2deg(self.plane.sweep_eq),"What is Clp/CL^2? (Roskam 6 - p. 420)")
         Clp_CL2=float(input('Clp/CL^2 ='))
         Deltaclp_drag=Clp_CL2*self.C_L**2-0.125*self.C_D_0
 
         c_l_p_w=BetaClp_k*k/Beta_Comp*1+Deltaclp_drag
-        c_l_p_v=2/self.plane.b_tot**2((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+        c_l_p_v=2/self.plane.b_tot**2 * ((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
         self.C_l_p=c_l_p_w+c_l_p_v
+
+        self.coefficients["C_l_p"]=self.C_l_p
     
     def calc_C_n_p(self):
         print("A =",self.plane.A,"Taper ratio =",self.plane.taper_eq,"What is Cnp/eps? (Roskam 6 - p. 420)")
@@ -333,7 +343,7 @@ class AerodynamicProperties:
         xbar_cbar=0.25
         C_n_p_CL=-1/6*(A+6*(A+np.cos(Sweep))*(xbar_cbar*np.tan(Sweep)/A+np.tan(Sweep)**2/12))/(A+4*np.cos(Sweep))
         self.C_n_p_w=C_n_p_CL*self.C_L+Cnp_eps*self.plane.twist[-1]
-        self.C_n_p_v=-2/self.b**2((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+        self.C_n_p_v=-2/self.b**2 * ((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
         self.C_n_p=self.C_n_p_w+self.C_n_p_v
 
     #----------------Yaw rate derivatives----------------

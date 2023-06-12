@@ -78,14 +78,7 @@ trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
 
 Coeff=AerodynamicProperties(plane,tail,trim,[[0.025,0.025],[0.025,0.025]])
-Coeff.calc_C_Y_beta()
-print(Coeff.C_Y_b)
-Coeff.calc_C_l_beta()
-print(Coeff.C_l_beta)
-Coeff.calc_C_Y_betadot()
-Coeff.calc_C_n_beta()
-print(Coeff.C_n_beta)
-print(Coeff.C_Y_betadot)
+
 '''
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])
 

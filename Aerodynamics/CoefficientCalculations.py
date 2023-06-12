@@ -14,7 +14,7 @@ from Plane import Plane
 
 #TODO:check all the inputs units
 class AerodynamicProperties:
-    def __init__(self,plane, tail,Steady_state, CmO_airfoil,e=1,MTOW=19900, twist = [0,1,1], h=5000 ,V=110): #Altitude in ft
+    def __init__(self,plane, tail,Steady_state, CmO_airfoil,e=1,MTOW=19900, twist = [0,0,0], h=5000 ,V=110): #Altitude in ft
         self.MTOW=MTOW
         self.e=e
 
@@ -32,45 +32,23 @@ class AerodynamicProperties:
         self.z_tail=self.tail.z_tail
 
 
-        self.Cl_alpha_v=self.tail.C_L_alpha_v
+        self.Cl_alpha_v=self.tail.CL_alpha_v
         self.sweep_half_v=self.tail.sweep_half_v
         self.Av=self.tail.A_v
         self.Sv=self.tail.S_v
 
         self.l_v=self.x_tail-self.plane.x_cg
-        self.z_v=self.z_tail-self.plane.z_cg
+        self.z_v=self.z_tail-0
         
-        self.h=Steady_state.h
+        self.h=h
         self.V=Steady_state.V
-        self.C_L=Steady_state.C_L
+        self.C_L=Steady_state.CL
         
-        self.define_C_D_0()
-        self.C_D=self.C_D_0+self.C_L**2/(np.pi*self.plane.A*self.e)
-
-        self.aoa=Steady_state.aoa
-        self.T_c=Steady_state.T_c
-        self.horisteady=Steady_state.horisteady
-
-        self.KX2=np.sqrt(self.plane.I_xx/self.MTOW)/self.plane.b_tot
-        self.KY2=np.sqrt(self.plane.I_yy/self.MTOW)/self.plane.b_tot
-        self.KZ2=np.sqrt(self.plane.I_zz/self.MTOW)/self.plane.b_tot
-        self.KXZ=self.plane.I_xz/(self.MTOW*self.plane.b_tot**2)
-
-        self.CmO_root_list = np.array([])
-        self.CmO_tip_list = np.array([])
-        self.twist = twist
-
-        self.atmos()
-        self.aerodynamic_properties()
-
-        for i in range(len(CmO_airfoil)):
-            self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
-            self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
-
         directory_path = "./Xflr dat"
         file_list = []
         data={}
 
+        self.coefficients={}
 
         for filename in os.listdir(directory_path):
             file_list.append(filename)
@@ -83,6 +61,46 @@ class AerodynamicProperties:
 
         self.data=data[self.plane.planename]
         self.calc_C_L_alpha()
+
+        self.atmos()
+        self.aerodynamic_properties()
+        self.define_C_D_0(0.3,0.1)
+
+        self.C_D=self.C_D_0+self.C_L**2/(np.pi*self.plane.A*self.e)
+
+        self.C_D_T_c=0 #Assuming no slipstream effect
+        self.C_m_T_c=0 #Assuming no slipstream effect
+
+        self.aoa=Steady_state.aoa
+        self.T_c=self.C_D
+        self.horisteady=True
+
+        self.KX2=np.sqrt(self.plane.I_xx/self.MTOW)/self.plane.b_tot
+        self.KY2=np.sqrt(self.plane.I_yy/self.MTOW)/self.plane.b_tot
+        self.KZ2=np.sqrt(self.plane.I_zz/self.MTOW)/self.plane.b_tot
+        self.KXZ=self.plane.I_xz/(self.MTOW*self.plane.b_tot**2)
+
+        self.CmO_root_list = np.array([])
+        self.CmO_tip_list = np.array([])
+        self.twist = twist
+
+
+        for i in range(len(CmO_airfoil)):
+            self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
+            self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
+
+        self.calc_C_X_0()
+        self.calc_C_Z_0()
+        self.calc_C_X_u()
+        self.calc_C_Z_u()
+        self.calc_C_m_u()
+        self.calc_C_X_alpha()
+        self.calc_C_Z_alpha()
+        self.calc_C_m_alpha()
+        print(self.coefficients)
+        self.calc_Cmac()
+        self.calc_C_Y_beta()
+
 
     def calc_C_L_alpha(self):
         start=np.where(self.data[:,0]==-5)[0][0]
@@ -109,7 +127,6 @@ class AerodynamicProperties:
         C_f_laminar = 1.328 / np.sqrt(self.Re_list[part])
         C_f_turbulent = 0.455 / ((np.log10(self.Re_list[part])) ** 2.58 * (1 + 0.144 * self.M ** 2))
         C_f_total = laminar_frac * C_f_laminar + (1 - laminar_frac) * C_f_turbulent
-        print('C_f_total', C_f_total)
         return C_f_total
 
     def define_C_D_part_wing(self, laminar_frac, part):
@@ -117,17 +134,15 @@ class AerodynamicProperties:
         C_f = self.define_C_f_wing(laminar_frac, part)
         FF = (1 + 0.6 / self.plane.max_thickness_location * self.plane.max_thickness + 100 * (self.plane.max_thickness) ** (4)) * (
                     1.34 * self.M ** 0.18 * (np.cos(self.plane.sweep[part])) ** 0.28)
-        print('FF', FF)
         S_wet = 2 * self.plane.S_list[part] * 1.07
-        C_D_part = FF * C_f * S_wet / self.plane.S
-        return C_D_part
+        self.C_D_part_wing = FF * C_f * S_wet / self.plane.S
+        return self.C_D_part_wing
     
     def define_C_f_other(self, laminar_frac, length):
         Re = self.rho * self.V * length / self.nu
         C_f_laminar = 1.328 / np.sqrt(Re)
         C_f_turbulent = 0.455 / ((np.log10(Re)) ** 2.58 * (1 + 0.144 * self.M ** 2))
         C_f_total = laminar_frac * C_f_laminar + (1 - laminar_frac) * C_f_turbulent
-        print('C_f_total', C_f_total)
         return C_f_total
     
     def define_C_D_part_nacelle(self, laminar_frac):
@@ -139,15 +154,16 @@ class AerodynamicProperties:
         FF = 1+0.35/f
         S_wet = np.pi*d**2/4+np.pi*d*l
         IF=0.036*(self.plane.MAC*d/self.plane.S)*(0.2)**2
-        C_D_part = FF * C_f * S_wet / self.plane.S+IF
-        return 2*C_D_part
+        self.C_D_nacelle = FF * C_f * S_wet / self.plane.S+IF
+        return 2*self.C_D_nacelle
 
-    def define_C_D_0(self, laminar_frac):
+    def define_C_D_0(self, laminar_frac_wing, laminar_frac_nacelle):
         self.C_D_0 = 0
         for i in range(len(self.plane.taper)):
-            self.C_D_0 += self.define_C_D_part_wing(laminar_frac, i)
-        self.C_D_0 += self.define_C_D_part_nacelle(laminar_frac)
+            self.C_D_0 += self.define_C_D_part_wing(laminar_frac_wing, i)
+        self.C_D_0 += self.define_C_D_part_nacelle(laminar_frac_nacelle)
         self.C_D_0 += 0.1 * self.C_D_0
+        self.coefficients['C_D_0'] = self.C_D_0
         return self.C_D_0
 
     def calc_Cmac(self):
@@ -162,22 +178,24 @@ class AerodynamicProperties:
                      (self.plane.A_list + 2 * np.cos(self.plane.sweep))) * (self.CmO_root_list + self.CmO_tip_list) / 2\
                     + self.dCmdEps*self.twist[1:] #Roskam 6 p 302 eq. 8.70
         print("Cmac", self.Cmac)
+        self.coefficients['Cmac'] = self.Cmac
 
     ### DYNAMIC STABILITY COEFFICIENTS ###
 
     def CLCDalphadot(self):
         self.C_L_alphadot=0
         self.C_D_alphadot=0
+        self.coefficients['C_L_alphadot'] = self.C_L_alphadot
+        self.coefficients['C_D_alphadot'] = self.C_D_alphadot
 
     def calc_C_Z_0(self):
-        self.C_X_0=-self.C_l-self.T_c*(self.aoa+self.plane.ip)
+        self.C_Z_0=-self.C_L-self.T_c*(self.aoa+self.plane.ip)
+        self.coefficients['C_Z_0'] = self.C_Z_0
 
     def calc_C_X_0(self):
         #Steady flight
-        if self.horisteady:
-            self.C_Z_0=0
-        else:
-            self.C_Z_0=-self.C_D+self.T_c
+        self.C_X_0=-self.C_D+self.T_c
+        self.coefficients['C_X_0'] = self.C_X_0
         
 
 
@@ -185,21 +203,36 @@ class AerodynamicProperties:
     def calc_C_X_u(self):
         self.C_X_u=-3*self.C_D*(1-self.C_D_T_c)
 
+
+        self.coefficients['C_X_u'] = self.C_X_u
+
     def calc_C_Z_u(self):
-        self.C_Z_u=-2*self.C_L+self.C_D*(-(self.alpha0+self.plane.ip)+3*self.C_D_T_c)
+        self.C_Z_u=-2*self.C_L+self.C_D*(-(self.aoa+self.plane.ip)+3*self.C_D_T_c)
+
+
+        self.coefficients['C_Z_u'] = self.C_Z_u
 
     def calc_C_m_u(self):
         self.C_m_u=-3*self.C_D*self.C_m_T_c
+
+
+        self.coefficients['C_m_u'] = self.C_m_u
 
     #----------------angle of attack derivatives----------------
     def calc_C_X_alpha(self):
         self.C_X_alpha=-self.C_L*(1-2*self.C_L_alpha/(np.pi*self.plane.A*self.e))
 
+        self.coefficients['C_X_alpha'] = self.C_X_alpha
+
     def calc_C_Z_alpha(self):
         self.C_Z_alpha=-self.C_L_alpha-self.C_D
 
+        self.coefficients['C_Z_alpha'] = self.C_Z_alpha
+
     def calc_C_m_alpha(self):
         self.C_m_alpha=-self.C_L_alpha*(self.x_ac/self.MAC)
+
+        self.coefficients['C_m_alpha'] = self.C_m_alpha
 
     #----------------pitch rate derivatives----------------
     def calc_C_X_q(self):

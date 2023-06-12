@@ -431,38 +431,38 @@ class Tail:
 
     def calc_flap_span_factor(self):
         print("Considering that the flap span is {} ?".format(self.eta))
-        self.Kb= float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
+        self.Kb= 1 #float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
 
     def calc_delta_cl(self):
         # Calculates the flap chord/ average chord form Sr/S
         self.cfc = self.SrS / self.eta  # Assumes average chord and sweep of zero
 
         print("Considering that the cf/c is {} and flap deflection {} deg".format(self.cfc, self.df_deg))
-        self.k_theory = float(input('What is k (Roskam 6 - p.228 - fig. 8.13)'))
+        self.k_theory =1 # float(input('What is k (Roskam 6 - p.228 - fig. 8.13)'))
 
         print("Considering that the cf/c is {} and t/c is {}".format(self.cfc, self.thickness_v))
-        self.cl_delta_theory = float(input('What is cl_delta_theory (Roskam 6 - p.228 - fig. 8.14)'))
+        self.cl_delta_theory = 5 # float(input('What is cl_delta_theory (Roskam 6 - p.228 - fig. 8.14)'))
 
         # We assume Cl_alpha_theory = Cl_alpha
 
         self.delta_cl = self.df_rad * self.cl_delta_theory * self.k_theory
 
-    def calc_CL_alpha_w(self):
+    def calc_CL_alpha_v(self):
         #Assumed ellipitical lift distribution
-        self.CL_alpha_w = 2*np.pi/(1+2*np.pi/np.pi/self.A_v)
+        self.CL_alpha_v = 2*np.pi/(1+2*np.pi/np.pi/self.A_v)
 
     def calc_rudder_effectiveness(self):
         print("Considering that the cf/c is {} and A_v is {}".format(self.cfc, self.A_v))
         print("A_v is only 2 if you choose for a body configuraton, if not, change A_v in class input to the A_v of the wingtip VS and check your findings")
-        self.rudder_effectiveness = float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
+        self.rudder_effectiveness = 1 # float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
 
     def calc_deltacl_rudder(self):
-        self.calc_CL_alpha_w()
+        self.calc_CL_alpha_v()
         self.calc_flap_span_factor()
         self.calc_delta_cl()
         self.calc_rudder_effectiveness()
 
-        self.delta_cL_rudder = self.Kb*self.delta_cl*self.CL_alpha_w/self.cl_alpha_theory*self.rudder_effectiveness
+        self.delta_cL_rudder = self.Kb*self.delta_cl*self.CL_alpha_v/self.cl_alpha_theory*self.rudder_effectiveness
 
 
     def calc_xv(self,S_v): #Body
@@ -480,13 +480,13 @@ class Tail:
     def calc_lv(self,S_v):#Body
         self.calc_xv(S_v)
         self.x_v_end_body = (self.coords_bot[1] - self.coords_bot[0]) / (self.b_i) * self.min_dy + self.coords_bot[0]
-        print(S_v)
+        # print(S_v)
         cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
         self.lv =self.x_v_end_body-self.x_cg-cr+self.x_v
 
     def f(self,S_v):
         self.calc_lv(S_v)  # keep in the loop
-        f = - self.T_engine * self.d_engine + 2* 0.5 * (self.CL_alpha_w * self.beta_engine_fail + self.delta_cL_rudder
+        f = - self.T_engine * self.d_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder
                                                         *(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * S_v * self.lv
         return f
 
@@ -494,7 +494,7 @@ class Tail:
         self.calc_deltacl_rudder()
 
         #Body
-        self.S_v_b = self.newtonRaphson(self.f,9,0.01,10000,0.00010,0.5)[2]
+        self.S_v_b = self.newtonRaphson(self.f,9,0.01,100,0.00010,0.5)[2]
         if self.S_v_b=="No solution found":
             self.S_v_b = 10000
 
@@ -503,7 +503,7 @@ class Tail:
         self.MAC_wt = 2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
 
         self.l_wt = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
-        self.S_v_wt = self.T_engine * self.d_engine/(2*0.5 * (self.CL_alpha_w *self.beta_engine_fail + self.delta_cL_rudder
+        self.S_v_wt = self.T_engine * self.d_engine/(2*0.5 * (self.CL_alpha_v *self.beta_engine_fail + self.delta_cL_rudder
                                                             *(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * self.l_wt)
 
         print('b',self.S_v_b)
@@ -521,10 +521,10 @@ class Tail:
 
         else:
             self.S_v = 2*np.copy(self.S_v_wt) #Surface for both wingtips
-            b = (self.S_v_wt/2/self.MAC_wt)
+            self.b = (self.S_v_wt/self.MAC_wt)
             self.x_tail = self.l_wt + self.x_cg
-            self.z_tail = -(b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
-            self.A_v = b**2/self.S_v
+            self.z_tail = -(self.b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
+            self.A_v = self.b**2/self.S_v
             print("Vertical stabiliser on Wingtips, A is {}".format(self.A_v))
 
 

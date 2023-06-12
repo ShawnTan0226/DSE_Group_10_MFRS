@@ -41,7 +41,7 @@ tail.tail_sizing()
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
 
-Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(38),sweep_outer=np.deg2rad(30))
+Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(38),sweep_outer=np.deg2rad(28))
 plane=Batterysize.makeplane()
 x_cg_batt=Batterysize.battery_placement()
 print(x_cg_batt)
@@ -67,12 +67,12 @@ if plot_plane_confiig:
     plt.legend()
     print('LG height',LG.height_MLG)
     plane.plot_plane()
-plane.xflrvelues()
+    plane.xflrvelues()
 
 
 plane.calculate_MOI(0,0,0)
 
-trim=Trim(0.5, 0.02, 0.02,110,5)
+trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
 
 

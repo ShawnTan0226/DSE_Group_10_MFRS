@@ -97,6 +97,9 @@ class AerodynamicProperties:
         self.calc_C_X_alpha()
         self.calc_C_Z_alpha()
         self.calc_C_m_alpha()
+        self.calc_C_X_q()
+        self.calc_C_Z_q()
+        self.calc_C_m_q()
         print(self.coefficients)
         self.calc_Cmac()
         self.calc_C_Y_beta()
@@ -106,7 +109,7 @@ class AerodynamicProperties:
         start=np.where(self.data[:,0]==-5)[0][0]
         end=np.where(self.data[:,0]==5)[0][0]
         coeff = np.polyfit(self.data[start:end,0],self.data[start:end,2],1)
-        self.C_L_alpha=coeff[0]
+        self.C_L_alpha=coeff[0]*180/np.pi
         return self.C_L_alpha
 
     ### ISA CALCULATIONS ###
@@ -185,16 +188,19 @@ class AerodynamicProperties:
     def CLCDalphadot(self):
         self.C_L_alphadot=0
         self.C_D_alphadot=0
+
         self.coefficients['C_L_alphadot'] = self.C_L_alphadot
         self.coefficients['C_D_alphadot'] = self.C_D_alphadot
 
     def calc_C_Z_0(self):
         self.C_Z_0=-self.C_L-self.T_c*(self.aoa+self.plane.ip)
+
         self.coefficients['C_Z_0'] = self.C_Z_0
 
     def calc_C_X_0(self):
         #Steady flight
         self.C_X_0=-self.C_D+self.T_c
+
         self.coefficients['C_X_0'] = self.C_X_0
         
 
@@ -229,20 +235,25 @@ class AerodynamicProperties:
 
         self.coefficients['C_Z_alpha'] = self.C_Z_alpha
 
-    def calc_C_m_alpha(self):
-        self.C_m_alpha=-self.C_L_alpha*(self.x_ac/self.MAC)
+    def calc_C_m_alpha(self): 
 
         self.coefficients['C_m_alpha'] = self.C_m_alpha
 
     #----------------pitch rate derivatives----------------
     def calc_C_X_q(self):
         self.C_X_q=0
+
+        self.coefficients['C_X_q'] = self.C_X_q
     
     def calc_C_Z_q(self):
         self.C_Z_q=-self.C_L_alpha*(self.x_ac-self.x_cg)/(self.MAC)
 
+        self.coefficients['C_Z_q'] = self.C_Z_q
+
     def calc_C_m_q(self):
-        self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2) 
+        self.C_m_q=-self.C_L_alpha*(self.x_ac-self.x_cg)**2/(self.MAC**2)
+
+        self.coefficients['C_m_q'] = self.C_m_q
 
     #----------------Side slip derivatives----------------
     def calc_C_Y_beta(self):

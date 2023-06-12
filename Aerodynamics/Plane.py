@@ -561,7 +561,7 @@ class Trim:
         self.CD=CD
         self.T_c=T_c
         self.V=V
-        self.aoa=aoa
+        self.aoa=np.deg2rad(aoa)
         self.theta=theta
         self.q=q
         self.beta=beta

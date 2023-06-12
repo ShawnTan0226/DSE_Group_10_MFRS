@@ -235,7 +235,8 @@ class AerodynamicProperties:
 
         self.coefficients['C_Z_alpha'] = self.C_Z_alpha
 
-    def calc_C_m_alpha(self): 
+    def calc_C_m_alpha(self):
+        self.C_m_alpha=-self.C_L_alpha*((self.x_ac-self.x_cg)/self.MAC)
 
         self.coefficients['C_m_alpha'] = self.C_m_alpha
 

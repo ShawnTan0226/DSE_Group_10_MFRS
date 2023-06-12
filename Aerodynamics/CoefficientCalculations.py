@@ -110,6 +110,12 @@ class AerodynamicProperties:
         self.calc_C_n_beta()
 
         self.calc_C_l_p()
+        self.calc_C_Y_p()
+        self.calc_C_n_p()
+
+        self.calc_C_Y_r()
+        self.calc_C_l_r()
+        self.calc_C_n_r()
         print(self.coefficients)
 
 
@@ -320,11 +326,11 @@ class AerodynamicProperties:
         self.coefficients['C_Y_betadot'] = self.C_Y_betadot
 
     #----------------Roll rate derivatives----------------
-    def calc_C_Y_p(self): 
-        #Should this be neglected?
+    def calc_C_Y_p(self):
         self.C_Y_p=2*self.C_Y_b_v*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b
 
         self.coefficients['C_Y_p'] = self.C_Y_p
+
 
     def calc_C_l_p(self):
         Beta_Comp=(1-self.M**2)**0.5
@@ -332,9 +338,9 @@ class AerodynamicProperties:
         k=self.C_l_alpha*Beta_Comp/(2*np.pi)
         BA_k=Beta_Comp*self.plane.A/k
         print("Gamma_b =",Gamma_b,"BA_k =",BA_k,"Taper =",self.plane.taper_eq,"What is BetaClp/k? (Roskam 6 - p. 418)")
-        BetaClp_k=float(input('BetaClp/k ='))
+        BetaClp_k=-0.3#float(input('BetaClp/k ='))
         print("A =",self.plane.A,"Quarter chord sweep(Lambda_1/4) =",np.rad2deg(self.plane.sweep_eq),"What is Clp/CL^2? (Roskam 6 - p. 420)")
-        Clp_CL2=float(input('Clp/CL^2 ='))
+        Clp_CL2=-0.01#float(input('Clp/CL^2 ='))
         Deltaclp_drag=Clp_CL2*self.C_L**2-0.125*self.C_D_0
 
         c_l_p_w=BetaClp_k*k/Beta_Comp*1+Deltaclp_drag
@@ -345,7 +351,7 @@ class AerodynamicProperties:
     
     def calc_C_n_p(self):
         print("A =",self.plane.A,"Taper ratio =",self.plane.taper_eq,"What is Cnp/eps? (Roskam 6 - p. 420)")
-        Cnp_eps=float(input('Cnp/eps ='))
+        Cnp_eps=0#float(input('Cnp/eps ='))
         Sweep=self.plane.sweep_eq
         A=self.plane.A
         xbar_cbar=0.25
@@ -360,21 +366,20 @@ class AerodynamicProperties:
     def calc_C_Y_r(self):
         # self.C_Y_r=-2*self.C_Y_beta_v*(self.x_ac_v-self.x_cg)/(self.MAC)
         #NOTE: incorporate x_ac_v and z_ac_b and z_cg in the plane object code
-        self.lv = self.x_ac_v - self.x_cg
-        self.zv = self.z_ac_v - self.z_cg
 
         # self.calc_C_Y_beta()
 
-        self.C_Y_r = -2 * self.C_Y_beta_v * (self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa)) / self.plane.b[-1]
+        self.C_Y_r = -2 * self.C_Y_b_v * (self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa)) / self.plane.b[-1]
 
         self.coefficients['C_Y_r'] = self.C_Y_r
 
 
     def calc_C_l_r(self):
-        self.C_l_r = self.C_l_r_w + self.C_l_r_v
 
         self.B = (1 - (self.M**2) * np.cos(self.plane.sweep_eq**2))**0.5
-        self.C_l_r_slope_low = float(input("From figure 10.41 (Page 430) in Roskam 6, provide slope value (OTHERWISE: assume 3.3 for A=6, Taper =0.26 and sweep=38deg"))
+
+        print("A =", self.plane.A, "Taper ratio =", self.plane.taper_eq, "Sweep angle =", self.plane.sweep_eq, "(Roskam 6 - p. 430 - Fig.10.41)")
+        self.C_l_r_slope_low = float(input("What is Clr/CL?"))
 
         self.C_l_r_slope = ((1 + (self.plane.A * (1 - self.B**2)) / (2 * self.B * (self.plane.A * self.B + 2 * np.cos(self.plane.sweep_eq)))) +
                            (((self.plane.A * self.B + 2*np.cos(self.plane.sweep_eq)) / (self.plane.A * self.B + 4*np.cos(self.plane.sweep_eq))) * ((np.tan(self.plane.sweep_eq)**2)/8)) * self.C_l_r_slope_low) / \
@@ -392,27 +397,24 @@ class AerodynamicProperties:
         self.C_l_r_w = (self.C_L) * self.C_l_r_slope + self.C_l_r_gamma * self.dihedral + self.C_l_r_epsilon * self.twist[-1] + self.C_l_r_dflaps * self.aoa_dflaps * self.dflaps
 
 
-        self.lv = self.x_ac_v - self.plane.x_cg
-        self.zv = self.z_ac_v - self.z_cg
-        self.C_l_r_v = -(2/(self.plane.b[-1]**2)) * (self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa)) * \
-                       (self.zv * np.cos(self.aoa) - self.lv * np.sin(self.aoa)) * self.C_Y_b_v
+        self.C_l_r_v = -(2/(self.plane.b[-1]**2)) * (self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa)) * \
+                       (self.z_v * np.cos(self.aoa) - self.l_v * np.sin(self.aoa)) * self.C_Y_b_v
 
         self.C_l_r = self.C_l_r_w + self.C_l_r_v
+
 
         self.coefficients['C_l_r'] = self.C_l_r
 
 
     
     def calc_C_n_r(self):
-        self.lv = self.x_ac_v - self.plane.x_cg
-        self.zv = self.z_ac_v - self.z_cg
 
         self.C_n_r_cl = float(input("From figure 10.44 (page 433) in Roskam 6, provide slope value"))
         self.C_n_r_cd0 = float(input("From figure 10.45 (page 434) in Roskam 6, provide slope value"))
 
         self.C_n_r_w = self.C_n_r_cl * self.C_L**2 + self.C_n_r_cd0 * self.C_D_0
 
-        self.C_n_r_v = (2/(self.plane.b[-1]**2)) * ((self.lv * np.cos(self.aoa) + self.zv * np.sin(self.aoa))**2) * self.C_Y_b_v
+        self.C_n_r_v = (2/(self.plane.b[-1]**2)) * ((self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa))**2) * self.C_Y_b_v
 
         self.C_n_r = self.C_n_r_w + self.C_n_r_v
 

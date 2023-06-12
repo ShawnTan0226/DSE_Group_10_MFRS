@@ -14,8 +14,9 @@ from Plane import Plane
 
 #TODO:check all the inputs units
 class AerodynamicProperties:
-    def __init__(self,plane, tail,Steady_state, CmO_airfoil,MTOW=19900, twist = [0,1,1], h=5000 ,V=110): #Altitude in ft
+    def __init__(self,plane, tail,Steady_state, CmO_airfoil,e=1,MTOW=19900, twist = [0,1,1], h=5000 ,V=110): #Altitude in ft
         self.MTOW=MTOW
+        self.e=e
 
         self.plane=plane
         self.tail=tail
@@ -42,7 +43,10 @@ class AerodynamicProperties:
         self.h=Steady_state.h
         self.V=Steady_state.V
         self.C_L=Steady_state.C_L
-        self.C_D=Steady_state.C_D
+        
+        self.define_C_D_0()
+        self.C_D=self.C_D_0+self.C_L**2/(np.pi*self.plane.A*self.e)
+
         self.aoa=Steady_state.aoa
         self.T_c=Steady_state.T_c
         self.horisteady=Steady_state.horisteady

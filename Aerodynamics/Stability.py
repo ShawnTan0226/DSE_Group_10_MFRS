@@ -53,3 +53,8 @@ class Stab:
                     self.Coeff.C_X_0 * self.Coeff.C_X_u + self.Coeff.C_Z_0 * self.Coeff.C_Z_u)
     
         self.eigenvalues_symm=np.roots([self.A_symm, self.B_symm, self.C_symm, self.D_symm, self.E_symm])
+
+    def Routh_discriminant(self):
+        self.Routh=self.B_asymm*self.C_asymm*self.D_asymm-self.D_asymm**2*self.A_asymm-self.B_asymm**2*self.E_asymm
+        return self.Routh
+        

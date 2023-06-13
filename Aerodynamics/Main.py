@@ -85,6 +85,7 @@ Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
+print(Stability.Routh_discriminant())
 
 '''
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])

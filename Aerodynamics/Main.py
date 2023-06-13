@@ -85,6 +85,7 @@ Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
+print('A---',Stability.A_asymm,'\n B---',Stability.B_asymm,'\n C---',Stability.C_asymm,'\n D---',Stability.D_asymm,'\n E',Stability.E_asymm)
 print(Stability.Routh_discriminant())
 
 '''

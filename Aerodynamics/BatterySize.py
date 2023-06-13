@@ -358,7 +358,7 @@ class Planform_calculation:
     def makeplane(self):
         self.solve_equation()
         if self.flying_wing==False:
-            self.plane=Plane(self.Cri,[self.taper_inner,self.taper_outer],[np.rad2deg(self.sweep_inner),np.rad2deg(self.sweep_outer)],[self.b_inner,self.b_outer+self.b_inner])
+            self.plane=Plane(self.Cri,[self.taper_inner,self.taper_outer],[np.rad2deg(self.sweep_inner),np.rad2deg(self.sweep_outer)],[self.b_inner,self.b_outer+self.b_inner],self.V_bat)
         elif self.flying_wing==True:
             self.plane=Plane(self.Cri,[self.taper_outer],[np.rad2deg(self.sweep_outer)],[self.b_inner+self.b_outer])
         return self.plane
@@ -386,15 +386,19 @@ class Planform_calculation:
             asd=self.plane.offset[1]+0.15*self.plane.c[1]-chord*0.15-offset
             V_body_triangle=2*np.trapz(thickness*(self.plane.offset[1]+0.15*self.plane.c[1]-chord*0.15-offset),y_tot)
             if V_body_triangle>V_batt_body:
+                self.option=1
                 x_cg_prop_batt_body=0.5*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+self.x_cg_prop_batt*self.V_bat_prop)/(self.V_bat)
+                self.cg_list=[[self.x_cg_batt[0],x_cg_prop_batt_body],[self.V_bat_prop,V_batt_body]]
                 return self.x_cg_batt[0]
             else:
+                self.option=2
                 V_body_rectangle=V_batt_body-V_body_triangle
                 A_x=2*np.trapz(thickness,y_tot)
                 x_batt_body=V_body_rectangle/A_x
                 x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
                 self.x_cg_batt=(x_cg_rect*V_body_rectangle+self.x_cg_prop_batt*self.V_bat_prop+0.5*self.plane.offset[1]*V_body_triangle)/(self.V_bat)
+                self.cg_list=[[self.x_cg_batt[0],x_cg_rect,0.5*self.plane.offset[1]],[self.V_bat_prop,V_body_rectangle,V_body_triangle]]
                 return self.x_cg_batt[0]
         else:
             chord_wing_sections = np.linspace(self.plane.c[1], self.plane.c[2], 100)
@@ -413,17 +417,22 @@ class Planform_calculation:
             offset=np.linspace(0,self.plane.offset[1],100)
             V_body_triangle=2*np.trapz(thickness*(self.plane.offset[1]+0.15*self.plane.c[1]-chord*0.15-offset),y_tot)
             if V_body_triangle>V_batt_body:
+                self.option=3
                 x_cg_prop_batt_body=0.66666*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+x_cg_prop_batt_wing*V_wing)/(self.V_bat)
+                self.cg_list=[[x_cg_prop_batt_body,x_cg_prop_batt_wing],[V_batt_body,V_wing]]
                 return self.x_cg_batt
             else:
+                self.option=4
                 V_body_rectangle=V_batt_body-V_body_triangle
                 A_x=2*np.trapz(thickness,y_tot)
                 x_batt_body=V_body_rectangle/A_x
                 x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
                 # plt.scatter(0,0.66666*self.plane.offset[1])
                 # plt.scatter(0,x_cg_rect)
-                self.x_cg_batt=(x_cg_rect*V_body_rectangle*0.9+x_cg_prop_batt_wing*V_wing+0.66666*self.plane.offset[1]*V_body_triangle)/(self.V_bat)
+                x_cg_triangle=0.66666*self.plane.offset[1]
+                self.x_cg_batt=(x_cg_rect*V_body_rectangle*0.9+x_cg_prop_batt_wing*V_wing+x_cg_triangle*V_body_triangle)/(self.V_bat)
+                self.cg_list=[[x_cg_rect,x_cg_prop_batt_wing,x_cg_triangle],[V_body_rectangle*0.9,V_wing,V_body_triangle]]
                 return self.x_cg_batt
 
 

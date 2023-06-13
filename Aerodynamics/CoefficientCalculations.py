@@ -110,8 +110,8 @@ class AerodynamicProperties:
         self.calc_C_l_beta()
         self.calc_C_n_beta()
 
-        self.calc_C_l_p()
         self.calc_C_Y_p()
+        self.calc_C_l_p()
         self.calc_C_n_p()
 
         self.calc_C_Y_r()
@@ -119,6 +119,9 @@ class AerodynamicProperties:
         self.calc_C_n_r()
         print(self.coefficients)
 
+    def Coeff_list(self):
+        for i in self.coefficients.keys():
+            print(self.coefficients[i])
 
     def calc_C_L_alpha(self):
         start=np.where(self.data[:,0]==-5)[0][0]
@@ -292,6 +295,8 @@ class AerodynamicProperties:
 
         #Final C_Y_beta
         self.C_Y_b =  self.C_Y_b_w + self.C_Y_b_v
+
+        self.coefficients['C_Y_b'] = self.C_Y_b
 
     def calc_C_l_beta(self): #eq: 10.34 Roskam 6
 

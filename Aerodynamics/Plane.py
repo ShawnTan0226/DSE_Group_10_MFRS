@@ -4,7 +4,7 @@ import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 #TODO: Implement multiple airfoil
 class Plane:
-    def __init__(self,Cri,taper,sweep,b,twist=[0,0],dihedral=0,planename='Main.csv',ip=0,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
+    def __init__(self,Cri,taper,sweep,b,Volume,twist=[0,0],dihedral=0,planename='Main.csv',ip=0,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
         #Plane object has n sections
         self.c=np.array([Cri]) #array of chord [m] form: [Middle c,c1,c2,c3,...,cn]
         self.taper = np.array(taper) #array of taper ratio form: [taper1,taper2,taper3,...,tapern]
@@ -13,6 +13,7 @@ class Plane:
         self.dihedral = np.deg2rad(dihedral)
         self.b = np.concatenate(([0],b)) #array of span [m] form: [0,b1,b2,b3,...,bn]
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
+        self.battery_volume=Volume #volume of the plane [m^3]
         
         self.b_tot=self.b[-1] #total span [m]
         self.coords=np.array([])
@@ -21,6 +22,7 @@ class Plane:
 
         self.planename=planename
         self.ip=ip
+        self.cg_list=0
 
         self.MAC_list=np.array([])
         self.x_list=np.array([])
@@ -225,6 +227,8 @@ class Plane:
         self.pylon_cg = pylon_cg
         self.vertical_tail_cg = vertical_tail_cg
 
+        self.battery_density=battery_mass/self.battery_volume
+
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
         chord_y_body = np.linspace(0, self.b[1]/2, 100)
 
@@ -341,10 +345,22 @@ class Plane:
         zz_function_wing=structure_density_wing*chord_wing_section**2*(x_wing**2+chord_y_wing**2)
         zz_function_body=structure_density_body*chord_body_section**2*(x_body**2+chord_y_body**2)
 
+        I_xx_batt=self.battery_density*self.cg_list[1][1]*self.y_list[1]**2
+        I_yy_batt=0
+        I_zz_batt=0
+        for i in range(len(self.cg_list[1])):
+            I_yy_batt+=self.battery_density*self.cg_list[1][i]*(self.cg_list[0][i]-self.x_cg)**2
+            if len(self.cg_list[1])==2:
+                y_cg=[0,self.y_list[1]]
+                I_zz_batt+=self.battery_density*self.cg_list[1][i]*((self.cg_list[0][i]-self.x_cg)**2+(y_cg[i])**2)
+            else:
+                y_cg=[0,self.y_list[1],0]
+                I_zz_batt+=self.battery_density*self.cg_list[1][i]*((self.cg_list[0][i]-self.x_cg)**2+(y_cg[i])**2)
 
-        self.I_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(xx_function_body, chord_y_body)+Landing_gear_mass*z_cg_lg**2+Vertical_tail_mass*z_cg_vtail**2+Pylon_mass*z_cg_pylon**2
-        self.I_yy=np.trapz(yy_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)+Landing_gear_mass*((self.lg_cg-self.x_cg)**2+z_cg_lg**2)+Vertical_tail_mass*((self.vertical_tail_cg-self.x_cg)**2+self.z_cg_pylon**2)+Pylon_mass*((self.pylon_cg-self.x_cg)**2+self.z_cg_pylon**2)
-        self.I_zz=np.trapz(zz_function_wing, chord_y_wing)+np.trapz(zz_function_body, chord_y_body)+Landing_gear_mass*(self.lg_cg-self.x_cg)**2+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)**2+Pylon_mass*(self.pylon_cg-self.x_cg)**2
+
+        self.I_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(xx_function_body, chord_y_body)+Landing_gear_mass*z_cg_lg**2+Vertical_tail_mass*z_cg_vtail**2+Pylon_mass*z_cg_pylon**2+I_xx_batt
+        self.I_yy=np.trapz(yy_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)+Landing_gear_mass*((self.lg_cg-self.x_cg)**2+z_cg_lg**2)+Vertical_tail_mass*((self.vertical_tail_cg-self.x_cg)**2+self.z_cg_pylon**2)+Pylon_mass*((self.pylon_cg-self.x_cg)**2+self.z_cg_pylon**2)+I_yy_batt
+        self.I_zz=np.trapz(zz_function_wing, chord_y_wing)+np.trapz(zz_function_body, chord_y_body)+Landing_gear_mass*(self.lg_cg-self.x_cg)**2+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)**2+Pylon_mass*(self.pylon_cg-self.x_cg)**2+I_zz_batt
         self.I_xz=Landing_gear_mass*(self.lg_cg-self.x_cg)*z_cg_lg+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)*z_cg_vtail+Pylon_mass*(self.pylon_cg-self.x_cg)*z_cg_pylon
 
 

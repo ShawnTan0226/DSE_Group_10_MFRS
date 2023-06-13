@@ -1,5 +1,6 @@
 from Plane import Plane, Trim, Tail
 from CoefficientCalculations import AerodynamicProperties
+from Control import control
 import sys
 import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,6 +27,7 @@ Wingloading=1412
 V_prop=3
 V_pl=3.5
 Volume=6.5
+
 
 #Tail class inputs
 eta =1
@@ -64,7 +66,7 @@ for i in range(10):
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 print(tail.S_v_wt,tail.b,tail.x_tail)
-plot_plane_confiig=True
+plot_plane_confiig=False
 if plot_plane_confiig:
     plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
     plt.scatter([0],[x_cg],color="red",label="CG")
@@ -84,8 +86,12 @@ trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
 
 
-
 Coeff=AerodynamicProperties(plane,tail,trim,[[0.025,0.025],[0.025,0.025]])
+
+Cs=control(plane,tail,0.4,30,1.2,Coeff.Cmac)
+print(Cs.calc_delta_Cm_outer())
+print(Cs.eta_i)
+
 Coeff.Coeff_list()
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()

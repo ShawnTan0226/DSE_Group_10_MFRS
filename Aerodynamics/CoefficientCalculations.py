@@ -91,6 +91,7 @@ class AerodynamicProperties:
             self.CmO_root_list = np.concatenate((self.CmO_root_list,[CmO_airfoil[i][0]]))
             self.CmO_tip_list = np.concatenate((self.CmO_tip_list,[CmO_airfoil[i][1]]))
 
+        self.CLCDalphadot()
         self.calc_C_X_0()
         self.calc_C_Z_0()
         self.calc_C_X_u()
@@ -200,11 +201,12 @@ class AerodynamicProperties:
     ### DYNAMIC STABILITY COEFFICIENTS ###
 
     def CLCDalphadot(self):
-        self.C_L_alphadot=0
-        self.C_D_alphadot=0
+        self.C_X_alphadot=0
+        self.C_Z_alphadot=0
+        self.C_m_alphadot=0
 
-        self.coefficients['C_L_alphadot'] = self.C_L_alphadot
-        self.coefficients['C_D_alphadot'] = self.C_D_alphadot
+        self.coefficients['C_X_alphadot'] = self.C_X_alphadot
+        self.coefficients['C_Z_alphadot'] = self.C_Z_alphadot
 
     def calc_C_Z_0(self):
         self.C_Z_0=-self.C_L-self.T_c*(self.aoa+self.plane.ip)
@@ -378,8 +380,8 @@ class AerodynamicProperties:
 
         self.B = (1 - (self.M**2) * np.cos(self.plane.sweep_eq**2))**0.5
 
-        print("A =", self.plane.A, "Taper ratio =", self.plane.taper_eq, "Sweep angle =", self.plane.sweep_eq, "(Roskam 6 - p. 430 - Fig.10.41)")
-        self.C_l_r_slope_low = float(input("What is Clr/CL?"))
+        print("A =", self.plane.A, "Taper ratio =", self.plane.taper_eq, "Sweep angle =", np.rad2deg(self.plane.sweep_eq), "(Roskam 6 - p. 430 - Fig.10.41)")
+        self.C_l_r_slope_low = 0.25#float(input("What is Clr/CL?"))
 
         self.C_l_r_slope = ((1 + (self.plane.A * (1 - self.B**2)) / (2 * self.B * (self.plane.A * self.B + 2 * np.cos(self.plane.sweep_eq)))) +
                            (((self.plane.A * self.B + 2*np.cos(self.plane.sweep_eq)) / (self.plane.A * self.B + 4*np.cos(self.plane.sweep_eq))) * ((np.tan(self.plane.sweep_eq)**2)/8)) * self.C_l_r_slope_low) / \
@@ -387,9 +389,11 @@ class AerodynamicProperties:
 
         self.C_l_r_gamma = 0.083 * (np.pi * self.plane.A * np.sin(self.plane.sweep_eq)) / (self.plane.A + 4*np.cos(self.plane.sweep_eq))
 
-        self.C_l_r_epsilon = float(input("From figure 10.42 (page 430) in Roskam 6, provide slope value (OTHERWISE: assume 0.125 for A=6, Taper=0.26 and sweep=38"))
+        print("A =", self.plane.A, "Taper ratio =", self.plane.taper_eq, "Sweep angle =", np.rad2deg(self.plane.sweep_eq), "(Roskam 6 - p. 430 - Fig.10.42)")
+        self.C_l_r_epsilon =0.002# float(input("What is Clr/epsilon?"))
 
-        self.C_l_r_dflaps = float(input("From figure 10.43 (page 431) in Roskam 6, provide slope value (OTHERWISE: assume 0 since dflaps is 0"))
+        # print("A =", self.plane.A, "Taper ratio =", self.plane.taper_eq, "Sweep angle =", self.plane.sweep_eq, "(Roskam 6 - p. 430 - Fig.10.42)")
+        self.C_l_r_dflaps =0# float(input("From figure 10.43 (page 431) in Roskam 6, provide slope value (OTHERWISE: assume 0 since dflaps is 0"))
         self.dflaps = 0 #Assume no flaps 
         self.aoa_dflaps = 0 #assume 0 because flaps is 0 but technically
 
@@ -408,9 +412,10 @@ class AerodynamicProperties:
 
     
     def calc_C_n_r(self):
-
-        self.C_n_r_cl = float(input("From figure 10.44 (page 433) in Roskam 6, provide slope value"))
-        self.C_n_r_cd0 = float(input("From figure 10.45 (page 434) in Roskam 6, provide slope value"))
+        
+        print("A =", self.plane.A, "Taper ratio =", self.plane.taper_eq, "Sweep angle =", np.rad2deg(self.plane.sweep_eq), "x/c =",(self.plane.x_quarter-self.x_cg)/self.MAC)
+        self.C_n_r_cl = -0.01#float(input("From figure 10.44 (page 433) in Roskam 6, provide slope value"))
+        self.C_n_r_cd0 = -0.45#float(input("From figure 10.45 (page 434) in Roskam 6, provide slope value"))
 
         self.C_n_r_w = self.C_n_r_cl * self.C_L**2 + self.C_n_r_cd0 * self.C_D_0
 

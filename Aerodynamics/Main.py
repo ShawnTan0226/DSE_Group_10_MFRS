@@ -8,6 +8,7 @@ sys.path.append(parent_dir)
 from LG_design import LandingGear
 # from ..Systems_and_structures.LG_design import LandingGear
 
+from Stability import Stab
 from BatterySize import Planform_calculation
 
 import matplotlib.pyplot as plt
@@ -77,7 +78,13 @@ trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
 
 
+
+
 Coeff=AerodynamicProperties(plane,tail,trim,[[0.025,0.025],[0.025,0.025]])
+Stability=Stab(plane,Coeff,MTOW)
+Stability.get_asymm_eigen()
+Stability.get_symm_eigen()
+print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
 
 '''
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])

@@ -12,21 +12,21 @@ class Stab:
         
         self.A_asymm = 16*(self.mub**3)*(self.Coeff.KX2*self.Coeff.KZ2-self.Coeff.KXZ**2)  #squared KXZ
 
-        self.B_asymm = -4*(self.mub**2)*(2*self.Coeff.C_Y_beta*(self.Coeff.KX2*self.Coeff.KZ2-self.Coeff.KXZ**2)+self.Coeff.C_n_r*self.Coeff.KX2+self.Coeff.C_l_p*self.Coeff.KZ2+(
+        self.B_asymm = -4*(self.mub**2)*(2*self.Coeff.C_Y_b*(self.Coeff.KX2*self.Coeff.KZ2-self.Coeff.KXZ**2)+self.Coeff.C_n_r*self.Coeff.KX2+self.Coeff.C_l_p*self.Coeff.KZ2+(
             self.Coeff.C_l_r+self.Coeff.C_n_p)*self.Coeff.KXZ)  # squared KXZ
 
-        self.C_asymm = 2*self.mub*((self.Coeff.C_Y_beta*self.Coeff.C_n_r-self.Coeff.C_Y_r*self.Coeff.C_n_beta)*self.Coeff.KX2+(
-            self.Coeff.C_Y_beta*self.Coeff.C_l_p-self.Coeff.C_l_beta*self.Coeff.C_Y_p)*self.Coeff.KZ2+((
-            self.Coeff.C_Y_beta*self.Coeff.C_n_p-self.Coeff.C_n_beta*self.Coeff.C_Y_p)+(
-            self.Coeff.C_Y_beta*self.Coeff.C_l_r-self.Coeff.C_l_beta*self.Coeff.C_Y_r))*self.Coeff.KXZ+4*self.mub*self.Coeff.C_n_beta*self.Coeff.KX2+4*self.mub*self.Coeff.C_l_beta*self.Coeff.KXZ+0.5*(self.Coeff.C_l_p*self.Coeff.C_n_r-self.Coeff.C_n_p*self.Coeff.C_l_r))
+        self.C_asymm = 2*self.mub*((self.Coeff.C_Y_b*self.Coeff.C_n_r-self.Coeff.C_Y_r*self.Coeff.C_n_beta)*self.Coeff.KX2+(
+            self.Coeff.C_Y_b*self.Coeff.C_l_p-self.Coeff.C_l_beta*self.Coeff.C_Y_p)*self.Coeff.KZ2+((
+            self.Coeff.C_Y_b*self.Coeff.C_n_p-self.Coeff.C_n_beta*self.Coeff.C_Y_p)+(
+            self.Coeff.C_Y_b*self.Coeff.C_l_r-self.Coeff.C_l_beta*self.Coeff.C_Y_r))*self.Coeff.KXZ+4*self.mub*self.Coeff.C_n_beta*self.Coeff.KX2+4*self.mub*self.Coeff.C_l_beta*self.Coeff.KXZ+0.5*(self.Coeff.C_l_p*self.Coeff.C_n_r-self.Coeff.C_n_p*self.Coeff.C_l_r))
 
-        self.D_asymm = -4*self.mub*self.Coeff.CL*(self.Coeff.C_l_beta*self.Coeff.KZ2+self.Coeff.C_n_beta*self.Coeff.KXZ)+2*self.mub*(
-            self.Coeff.C_l_beta*self.Coeff.C_n_p-self.Coeff.C_n_beta*self.Coeff.C_l_p)+0.5*self.Coeff.C_Y_beta*(
+        self.D_asymm = -4*self.mub*self.Coeff.C_L*(self.Coeff.C_l_beta*self.Coeff.KZ2+self.Coeff.C_n_beta*self.Coeff.KXZ)+2*self.mub*(
+            self.Coeff.C_l_beta*self.Coeff.C_n_p-self.Coeff.C_n_beta*self.Coeff.C_l_p)+0.5*self.Coeff.C_Y_b*(
             self.Coeff.C_l_r*self.Coeff.C_n_p-self.Coeff.C_n_r*self.Coeff.C_l_p)+0.5*self.Coeff.C_Y_p*(
             self.Coeff.C_l_beta*self.Coeff.C_n_r-self.Coeff.C_n_beta*self.Coeff.C_l_r)+0.5*self.Coeff.C_Y_r*(
             self.Coeff.C_l_p*self.Coeff.C_n_beta-self.Coeff.C_n_p*self.Coeff.C_l_beta) # Added minus sign to the front
 
-        self.E_asymm = self.Coeff.CL*(self.Coeff.C_l_beta*self.Coeff.C_n_r-self.Coeff.C_n_b*self.Coeff.C_l_r)
+        self.E_asymm = self.Coeff.C_Y_b*(self.Coeff.C_l_beta*self.Coeff.C_n_r-self.Coeff.C_n_beta*self.Coeff.C_l_r)
 
         self.eigenvalues_asymm=np.roots([self.A_asymm, self.B_asymm, self.C_asymm, self.D_asymm, self.E_asymm])
 

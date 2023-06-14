@@ -442,7 +442,7 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
+    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2,
                  thickness_v=0.12, def_rudder_emergency = 15, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v
@@ -697,6 +697,7 @@ class Tail:
         self.calc_xv_b_wt(S_v)
         self.calc_lv_b_wt(S_v)
         # Assign variables
+        self.S_v_b1 = S_v
         self.A_v_b1 = self.A_v
         self.b_v_b1 = np.copy(self.b_v_b)
         self.l_v_b1 = np.copy(self.l_v_b_wt)

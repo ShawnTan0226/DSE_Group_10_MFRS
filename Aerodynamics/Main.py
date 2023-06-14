@@ -74,16 +74,15 @@ for i in range(10):
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail_wt1,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
 y = tail.funct_f_b_wt(x)
-plt.plot(x,y)
-plt.show()
+# tail.tail_dimensions(8)
 
 
 print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
 plot_plane_confiig=True
-plot_payload_config=True
-record=False
+plot_payload_config=False
+record=True
 if plot_plane_confiig:
     if plot_payload_config:
         plane.draw_battery_placement(0.5,False)
@@ -92,12 +91,13 @@ if plot_plane_confiig:
     plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
     plt.scatter([0],[x_cg],color="red",label="CG")
     plt.scatter([plane.y_quarter],[plane.x_quarter],color="green",label="ac")
-    # plt.scatter([-plane.b_tot/2,plane.b_tot/2],[tail.x_tail,tail.x_tail],color="orange",label="tail")
+    plt.plot([plane.coords_bot[0]-tail.cr_v_b,plane.coords_bot[0]],[0,0],color="black",label="tail")
     plt.legend()
     print('LG height',LG.height_MLG)
     print('x_cg',x_cg)
     plt.show()
     plane.xflrvelues()
+
 
 
 plane.calculate_MOI(0,0,0)

@@ -228,6 +228,9 @@ class AerodynamicProperties:
         self.Cmac = ((self.plane.A_list * (np.cos(self.plane.sweep) ** 2)) /
                      (self.plane.A_list + 2 * np.cos(self.plane.sweep))) * (self.CmO_root_list + self.CmO_tip_list) / 2\
                     + self.dCmdEps*self.twist[1:] #Roskam 6 p 302 eq. 8.70
+        S1 = np.sum(self.plane.S_list *self.Cmac)
+        S2 = np.sum(self.plane.S_list)
+        self.Cmac = S1/S2
         print("Cmac", self.Cmac)
         self.coefficients['Cmac'] = self.Cmac
 

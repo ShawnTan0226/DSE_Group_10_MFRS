@@ -640,8 +640,8 @@ class Tail:
         x_v_end_body = self.coords_bot[0]
         #print('coords', self.coords_bot)
         #print('S_v',S_v)
-        cr = (S_v / self.A_v_b1) ** 0.5 * 2 / (self.taper_v + 1)
-        self.l_v_b_wt = x_v_end_body - self.x_cg - cr + self.x_v_b_wt
+        self.cr_v_b = (S_v / self.A_v_b1) ** 0.5 * 2 / (self.taper_v + 1)
+        self.l_v_b_wt = x_v_end_body - self.x_cg - self.cr_v_b + self.x_v_b_wt
         #print('length',x_v_end_body)
         #print('cg',self.x_cg)
         #print('cr', cr)
@@ -692,7 +692,7 @@ class Tail:
         self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips and body VS
         self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
 
-    def tail_dimensions(self, S_v):
+    def tail_dimensions(self, S_v):#Tail dimensions in function of tail input
         self.tail_sizing_2()
         self.calc_xv_b_wt(S_v)
         self.calc_lv_b_wt(S_v)

@@ -55,6 +55,8 @@ y = tail.funct_f_b_wt(x)
 # Create the plot
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
+pushers=False
+
 for i in range(10):
     Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(38),sweep_outer=np.deg2rad(28))
     plane=Batterysize.makeplane()
@@ -66,26 +68,22 @@ for i in range(10):
     x_cg_eng=0.85*plane.b_tot/2
     x_cg_system=0.281*plane.b_tot/2
 
-    
-    LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
+    LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
-    tail.tail_sizing_2_2()
-
+    tail.tail_sizing_2()
 
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail_wt1,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
 
 
 
-LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
-print(tail.S_v_wt,tail.b,tail.x_tail)
-plot_plane_confiig=True
+LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
 plot_plane_confiig=True
 if plot_plane_confiig:
     plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
     plt.scatter([0],[x_cg],color="red",label="CG")
     plt.scatter([plane.y_quarter],[plane.x_quarter],color="green",label="ac")
-    plt.scatter([-plane.b_tot/2,plane.b_tot/2],[tail.x_tail,tail.x_tail],color="orange",label="tail")
+    # plt.scatter([-plane.b_tot/2,plane.b_tot/2],[tail.x_tail,tail.x_tail],color="orange",label="tail")
     plt.legend()
     print('LG height',LG.height_MLG)
     print('x_cg',x_cg)
@@ -94,6 +92,7 @@ if plot_plane_confiig:
 
 
 plane.calculate_MOI(0,0,0)
+plane.record_planform()
 
 trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
@@ -113,6 +112,7 @@ print('new_CL_max',Cs.CL_max_new)
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()
+Stability.record_stability()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
 print('A---',Stability.A_asymm,'\nB---',Stability.B_asymm,'\nC---',Stability.C_asymm,'\nD---',Stability.D_asymm,'\nE---',Stability.E_asymm)
 print(Stability.Routh_discriminant())

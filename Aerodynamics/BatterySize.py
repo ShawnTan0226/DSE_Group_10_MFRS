@@ -369,7 +369,7 @@ class Planform_calculation:
         a=(self.plane.c[-1]-self.plane.c[1])*2/self.plane.b[-1]
         print(V_pl_extra)
         if V_pl_extra<=0:
-            y=np.roots([a**2,2*a,self.plane.c[-1]**2]-self.V_bat_prop/self.Area_inner)
+            y=np.roots([a**2,2*a,self.plane.c[-1]**2-self.V_bat_prop/self.Area_inner])
             y_wing=np.linspace(y,self.plane.b[-1],100)
             y_wing_x=y_wing-y
             chord_wing=a*y_wing+self.plane.c[-1]
@@ -390,6 +390,7 @@ class Planform_calculation:
                 x_cg_prop_batt_body=0.5*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+self.x_cg_prop_batt*self.V_bat_prop)/(self.V_bat)
                 self.cg_list=[[self.x_cg_batt[0],x_cg_prop_batt_body],[self.V_bat_prop,V_batt_body]]
+                print('Option------',self.option)
                 return self.x_cg_batt[0]
             else:
                 self.option=2
@@ -399,6 +400,8 @@ class Planform_calculation:
                 x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
                 self.x_cg_batt=(x_cg_rect*V_body_rectangle+self.x_cg_prop_batt*self.V_bat_prop+0.5*self.plane.offset[1]*V_body_triangle)/(self.V_bat)
                 self.cg_list=[[self.x_cg_batt[0],x_cg_rect,0.5*self.plane.offset[1]],[self.V_bat_prop,V_body_rectangle,V_body_triangle]]
+                print('Option------',self.option)
+                print('Bruhbasiugfahewefgiefsigu')
                 return self.x_cg_batt[0]
         else:
             chord_wing_sections = np.linspace(self.plane.c[1], self.plane.c[2], 100)
@@ -421,6 +424,7 @@ class Planform_calculation:
                 x_cg_prop_batt_body=0.66666*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+x_cg_prop_batt_wing*V_wing)/(self.V_bat)
                 self.cg_list=[[x_cg_prop_batt_body,x_cg_prop_batt_wing],[V_batt_body,V_wing]]
+                print('Option------',self.option)
                 return self.x_cg_batt
             else:
                 self.option=4
@@ -433,7 +437,10 @@ class Planform_calculation:
                 x_cg_triangle=0.66666*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_rect*V_body_rectangle*0.9+x_cg_prop_batt_wing*V_wing+x_cg_triangle*V_body_triangle)/(self.V_bat)
                 self.cg_list=[[x_cg_rect,x_cg_prop_batt_wing,x_cg_triangle],[V_body_rectangle*0.9,V_wing,V_body_triangle]]
+                
+                print('Option------',self.option)
                 return self.x_cg_batt
+            
 
 
 

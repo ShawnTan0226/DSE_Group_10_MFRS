@@ -75,7 +75,7 @@ for i in range(10):
     x_cg_system=0.281*plane.b_tot/2
 
     
-    LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=False)
+    LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
     tail.tail_sizing()
 
@@ -85,7 +85,7 @@ for i in range(10):
 
 
 
-LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=False)
+LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 print(tail.S_v_wt,tail.b,tail.x_tail)
 plot_plane_confiig=True
 if plot_plane_confiig:

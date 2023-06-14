@@ -317,7 +317,7 @@ class AerodynamicProperties:
             AvfAv = 1  # float(input('Avf/Av (if you dont know assume 1)'))
             Av_hfAvf = 1.2  # float(input('Avf/Av (if you dont know assume 1.2)'))
             Kvh = 1.2  # float(input('Kvh (if you dont know assume 1.2)'))
-            self.A_v_eff = AvfAv * self.Av * (1 + Kvh * ((Av_hfAvf) - 1))
+            self.A_v_eff = AvfAv * self.A_v_wt * (1 + Kvh * ((Av_hfAvf) - 1))
             constant_wt = 0.724 + 3.06 * ((self.S_v_wt1 / self.plane.S) / (1 + np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A
             self.C_Y_b_v_wt = -1*self.Cl_alpha_v * constant_wt *self.S_v_wt1/self.plane.S
 
@@ -327,7 +327,7 @@ class AerodynamicProperties:
             AvfAv = 1  # float(input('Avf/Av (if you dont know assume 1)'))
             Av_hfAvf = 1.2  # float(input('Avf/Av (if you dont know assume 1.2)'))
             Kvh = 1.2  # float(input('Kvh (if you dont know assume 1.2)'))
-            self.A_v_eff = AvfAv * self.Av * (1 + Kvh * ((Av_hfAvf) - 1))
+            self.A_v_eff = AvfAv * self.A_v_b * (1 + Kvh * ((Av_hfAvf) - 1))
             constant_wt = 0.724 + 3.06 * (
                         (self.S_v_b / self.plane.S) / (1 + np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A
             self.C_Y_b_v_b = -1 * self.Cl_alpha_v * constant_wt * self.S_v_b / self.plane.S

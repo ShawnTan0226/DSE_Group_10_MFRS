@@ -75,7 +75,7 @@ for i in range(10):
     x_cg_system=0.281*plane.b_tot/2
 
     
-    LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
+    LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=False)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
     tail.tail_sizing()
 
@@ -85,9 +85,9 @@ for i in range(10):
 
 
 
-LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
+LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=False)
 print(tail.S_v_wt,tail.b,tail.x_tail)
-plot_plane_confiig=False
+plot_plane_confiig=True
 if plot_plane_confiig:
     plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
     plt.scatter([0],[x_cg],color="red",label="CG")
@@ -95,6 +95,7 @@ if plot_plane_confiig:
     plt.scatter([-plane.b_tot/2,plane.b_tot/2],[tail.x_tail,tail.x_tail],color="orange",label="tail")
     plt.legend()
     print('LG height',LG.height_MLG)
+    print('x_cg',x_cg)
     plane.plot_plane()
     plane.xflrvelues()
 
@@ -109,11 +110,13 @@ trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
 Coeff=AerodynamicProperties(plane,tail,trim,[[0.025,0.025],[0.025,0.025]])
 
-Cs=control(plane,tail,0.4,30,1.2,Coeff.Cmac)
+
+Cs=control(plane,tail,0.4,-30,1.2,Coeff.Cmac,Coeff.C_L_alpha,Coeff.C_l_alpha)
+print('dcm----',Cs.dCm_req)
 print(Cs.calc_delta_Cm_outer())
 print(Cs.eta_i)
+print('new_CL_max',Cs.CL_max_new)
 
-Coeff.Coeff_list()
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()

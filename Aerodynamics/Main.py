@@ -41,7 +41,7 @@ Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_da
 plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
 tail = Tail(plane,eta,SrS,T_engine,l_engine, d_engine,x_cg)
-tail.tail_sizing()
+tail.tail_sizing_2()
 
 # Define the function to plot
 
@@ -52,15 +52,6 @@ x = np.linspace(-10, 30)
 y = tail.funct_f_b_wt(x)
 
 # Create the plot
-plt.plot(x, y)
-
-# Add labels and title
-plt.xlabel('x')
-plt.ylabel('f(x)')
-plt.title('Plot of f(x) = f(S_v)')
-
-# Display the plot
-plt.show()
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
 for i in range(10):
@@ -77,10 +68,10 @@ for i in range(10):
     
     LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
-    tail.tail_sizing()
+    tail.tail_sizing_2()
 
 
-    x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
+    x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail_wt1,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
 
 

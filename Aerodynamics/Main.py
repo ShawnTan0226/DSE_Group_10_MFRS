@@ -41,12 +41,13 @@ Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_da
 plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
 tail = Tail(plane,eta,SrS,T_engine,l_engine, d_engine,x_cg)
-tail.tail_sizing()
+tail.tail_sizing_2()
+tail.funct_f_b_wt(2.215)
 
 # Define the function to plot
 
 # Generate x values
-x = np.linspace(-10, 30)
+x = np.linspace(-10, 100)
 
 # Generate y values by applying the function to each x value
 y = tail.funct_f_b_wt(x)
@@ -57,10 +58,11 @@ plt.plot(x, y)
 # Add labels and title
 plt.xlabel('x')
 plt.ylabel('f(x)')
-plt.title('Plot of f(x) = f(S_v)')
+plt.title('Plot of f(S_v)')
 
 # Display the plot
 plt.show()
+
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
 for i in range(10):
@@ -77,7 +79,7 @@ for i in range(10):
     
     LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
-    tail.tail_sizing()
+    tail.tail_sizing_2()
 
 
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
@@ -87,7 +89,7 @@ for i in range(10):
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 print(tail.S_v_wt,tail.b,tail.x_tail)
-plot_plane_confiig=False
+plot_plane_confiig=True
 if plot_plane_confiig:
     plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
     plt.scatter([0],[x_cg],color="red",label="CG")

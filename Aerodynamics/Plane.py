@@ -375,7 +375,7 @@ class Plane:
     #    x=0
 class Tail:
     def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
-                 thickness_v=0.12, def_rudder_emergency = 10, beta_max=30, Cl_alpha=2*np.pi,
+                 thickness_v=0.12, def_rudder_emergency = 20, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v
         self.Taper_v=taper_v
@@ -395,7 +395,7 @@ class Tail:
         self.sweep_half_v = sweep_half_v
 
         self.beta_max_rad = np.deg2rad(beta_max)#Make sure to add safety factor
-        self.beta_engine_fail = self.beta_max_rad*0.2
+        self.beta_engine_fail = self.beta_max_rad*0.4
 
         self.plane = plane #plane pobject
         self.x_cg = x_cg
@@ -552,13 +552,13 @@ class Tail:
 ###  --- Vertical stabiliser on wingtips + one vertical stabiliser on the body --- (iteration: 1)
 
     def calc_xv_b_wt(self,S_v): #Body+wing tips
-        cr = (S_v/self.A_v)**0.5*2/(self.taper_v+1)
+        cr = (S_v/self.A_v_b1)**0.5*2/(self.taper_v+1)
         self.cr_test = cr
         #print('cr',cr)
 
         MAC = 2/3 * cr*(1+self.taper_v+self.taper_v**2)/(1+self.taper_v)
         self.MAC_test = MAC
-        self.b_v_b = (self.A_v/S_v)**0.5
+        self.b_v_b = (self.A_v_b1/S_v)**0.5
 
         self.z_v_b = -(self.b_v_b)*(MAC-cr)/(cr-self.taper_v*cr)
 
@@ -571,7 +571,7 @@ class Tail:
         x_v_end_body = self.coords_bot[0]
         #print('coords', self.coords_bot)
         #print('S_v',S_v)
-        cr = (S_v / self.A_v) ** 0.5 * 2 / (self.taper_v + 1)
+        cr = (S_v / self.A_v_b1) ** 0.5 * 2 / (self.taper_v + 1)
         self.l_v_b_wt = x_v_end_body - self.x_cg - cr + self.x_v_b_wt
         #print('length',x_v_end_body)
         #print('cg',self.x_cg)
@@ -580,7 +580,7 @@ class Tail:
 
     def funct_f_b_wt(self,S_v):
         self.calc_lv_b_wt(S_v)  # keep in the loop
-        f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1+  0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt
+        f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1+  0.5 * (self.CL_alpha_v * self.beta_engine_fail) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt
         #print('Engine',- self.T_engine * self.dy_engine)
         #print('Wt',2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1)
         #print('Body',  0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt)
@@ -594,31 +594,33 @@ class Tail:
     def tail_sizing_2(self): #Wingtips + one body configuration
         self.calc_deltacl_rudder()
         # Wingtips
+        self.A_v_wt1 = self.A_v
         cr_t = self.plane.c[-1]
         self.MAC_wt1 = 2 / 3 * (cr_t + self.taper_v * cr_t + self.taper_v ** 2 * cr_t) / (1 + self.taper_v)
-        self.S_v_wt1 = self.A_v * ((cr_t+self.taper_v*cr_t)/2)**2  # Surface for one of the wingtips
-        self.b_v_wt1 = (self.S_v_wt1*self.A_v)**0.5
+        self.S_v_wt1 = self.A_v_wt1 * ((cr_t+self.taper_v*cr_t)/2)**2  # Surface for one of the wingtips
+        self.b_v_wt1 = (self.S_v_wt1*self.A_v_wt1)**0.5
         self.x_tail_wt1 = -0.75 * cr_t + self.coords_bot[-1]
         self.l_v_wt1 = self.x_tail_wt1 - self.x_cg
         self.z_tail_wt1 = -(self.b_v_wt1)*(self.MAC_wt1-cr_t)/(cr_t-self.taper_v*cr_t)
 
 
+
         #Body
-        self.S_v_b_wt1 = self.newtonRaphson_tail(self.funct_f_b_wt, 9, 0.005, 100, 0.00001, 0.75)[2]  # surface of body
-        self.x_tail_b1 = self.l_v_b_wt + self.x_cg
-        self.z_tail_b1 = self.z_v_b
-        self.b_v_b1 = self.b_v_b
+        self.A_v_b1 = self.A_v
+        self.S_v_b1 = self.newtonRaphson_tail(self.funct_f_b_wt, 9, 0.005, 100, 0.00001, 0.75)[2]  # surface of body
+        self.b_v_b1 = np.copy(self.b_v_b)
+        self.l_v_b1 = np.copy(self.l_v_b_wt)
+        self.x_tail_b1 = self.l_v_b1 + self.x_cg
+        self.z_tail_b1 = np.copy(self.z_v_b)
+
+        #Check offset of engines
         self.x_offset_engine = -(self.dy_engine / 2 / np.tan(self.beta_max_rad) - self.coords_bot[0] + self.coords_bot[
             1] - self.l_engine/2)
-
         if self.x_offset_engine <= 0:
             self.x_offset_engine = 0
-
-        self.S_v = 2 * np.copy(self.S_v_wt1)+np.copy(self.S_v_b_wt1)  # Surface for both wingtips
-        #self.b = (self.S_v_wt / self.MAC_wt)
-        #self.x_tail = self.l_wt + self.x_cg
-        #self.z_tail = -(self.b) * (self.MAC_wt - cr_t) / (cr_t - self.taper_v * cr_t)
-        #self.A_v = self.b ** 2 / self.S_v
+        print(self.S_v_wt1,self.S_v_b1)
+        self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips
+        self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
 
 
     def Tail_positioning(self):

@@ -44,21 +44,26 @@ class AerodynamicProperties:
             self.z_v=self.z_tail-0
 
         elif self.iteration == 1: #Wingtips + 1 vert. Stabiliser on body
-            #self.x_tail_wt = tail.
-            #self.x_tail_b =
-            #self.z_tail_wt =
-            #self.z_tail_b =
+            #wingtips
+            self.A_v_wt = tail.A_v_wt1
+            self.MAC_wt =tail.MAC_wt1
+            self.S_v_wt = tail.S_v_wt1
+            self.b_v_wt= tail.b_v_wt1
+            self.x_tail_wt = tail.x_tail_wt1 #distance from tip to ac
+            self.l_v_wt = tail.l_v_wt1 #distance from cg to ac
+            self.z_tail_wt = tail.z_tail_wt1
 
-            #    self.tail.x_tail
-            self.z_tail = self.tail.z_tail
+            #body
+            self.A_v_b = tail.A_v_b1
+            self.MAC_b = tail.MAC_b1
+            self.S_v_b = tail.S_v_b1
+            self.b_v_b = tail.b_v_b1
+            self.x_tail_b = tail.x_tail_b1  # distance from tip to ac
+            self.l_v_b = tail.l_v_b1  # distance from cg to ac
+            self.z_tail_b = tail.z_tail_b1
 
-            self.Cl_alpha_v = self.tail.CL_alpha_v
             self.sweep_half_v = self.tail.sweep_half_v
-            self.Av = self.tail.A_v
-            self.Sv = self.tail.S_v
-
-            self.l_v = self.x_tail - self.plane.x_cg
-            self.z_v = self.z_tail - 0
+            self.Cl_alpha_v = self.tail.CL_alpha_v
 
 
 

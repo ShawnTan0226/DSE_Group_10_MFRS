@@ -56,7 +56,6 @@ class AerodynamicProperties:
 
             #body
             self.A_v_b = tail.A_v_b1
-            self.MAC_b = tail.MAC_b1
             self.S_v_b = tail.S_v_b1
             self.b_v_b = tail.b_v_b1
             self.x_tail_b = tail.x_tail_b1  # distance from tip to ac

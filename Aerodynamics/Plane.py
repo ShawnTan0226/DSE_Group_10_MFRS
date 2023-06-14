@@ -34,6 +34,7 @@ class Plane:
         self.equivalent_wing()
         self.define_airfoil(airfoil)
 
+
         self.tailnumber = number_of_tail
 
         # self.aerodynamic_properties()
@@ -80,6 +81,22 @@ class Plane:
         # plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
         plt.gca().invert_yaxis()
         plt.show()
+    def add_text_to_file(self,file_path, text):
+        with open(file_path, 'a') as file:
+            file.write(text)
+    
+    def record_planform(self):
+        text='S: '+str(self.S)+'\nb: '+str(self.b)+'\nc: '+str(self.c)+'\ntaper: '+str(self.taper)+'\nsweep: '+str(self.sweep)+'\nA: '+str(self.A)+'\nMAC: '+str(self.MAC)+'\n\n'
+        print(text)
+        self.add_text_to_file('./Record/Planform record.txt', text)
+
+    def get_planform(self):
+        print('S: ',self.S)
+        print('b: ',self.b)
+        print('c: ',self.c)
+        print('taper: ',self.taper)
+        print('sweep: ',self.sweep)
+
 
     def xflrvelues(self):
         xflr={}

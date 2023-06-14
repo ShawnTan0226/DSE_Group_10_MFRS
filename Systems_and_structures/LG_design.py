@@ -57,7 +57,7 @@ class LandingGear:
         w = self.height_MLG / np.tan(self.ang_tip)
         # Angle from NLG to half track width
         beta = np.arcsin(w / (self.xcg - self.pos_x_NLG))
-        self.track_width_MLG = 2 * np.tan(beta) * (self.pos_x_MLG - self.pos_x_NLG)
+        self.track_width_MLG = np.max([5,2 * np.tan(beta) * (self.pos_x_MLG - self.pos_x_NLG)])
 
         # Lateral clearance
         if pusher:

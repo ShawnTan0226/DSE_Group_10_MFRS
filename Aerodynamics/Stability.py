@@ -57,4 +57,13 @@ class Stab:
     def Routh_discriminant(self):
         self.Routh=self.B_asymm*self.C_asymm*self.D_asymm-self.D_asymm**2*self.A_asymm-self.B_asymm**2*self.E_asymm
         return self.Routh
+    
+    def add_text_to_file(self,file_path, text):
+        with open(file_path, 'a') as file:
+            file.write(text)
+
+    def record_stability(self):
+        text='Symmetric eigenvalues: '+str(self.eigenvalues_symm)+'\nAsymmetric eigenvalues: '+str(self.eigenvalues_asymm)+'\nCoefficients'+str(self.Coeff.coefficients)+'\n\n'
+        print(text)
+        self.add_text_to_file('./Record/Stability record.txt', text)
         

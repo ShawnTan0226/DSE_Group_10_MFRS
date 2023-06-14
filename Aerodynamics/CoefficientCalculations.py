@@ -155,6 +155,8 @@ class AerodynamicProperties:
         end=np.where(self.data[:,0]==5)[0][0]
         coeff = np.polyfit(self.data[start:end,0],self.data[start:end,2],1)
         self.C_L_alpha=coeff[0]*180/np.pi
+
+        self.coefficients['C_L_alpha']=self.C_L_alpha
         return self.C_L_alpha
 
     ### ISA CALCULATIONS ###

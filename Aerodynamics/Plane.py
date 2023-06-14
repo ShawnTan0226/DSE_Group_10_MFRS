@@ -476,7 +476,7 @@ class Tail:
     def calc_rudder_effectiveness(self):
         print("Considering that the cf/c is {} and A_v is {}".format(self.cfc, self.A_v))
         print("A_v is only 2 if you choose for a body configuraton, if not, change A_v in class input to the A_v of the wingtip VS and check your findings")
-        self.rudder_effectiveness = 1 # float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
+        self.rudder_effectiveness = 1 # float(input('What is the flap effectiveness? ( Roskam 6 - p.261 - fig. 8.53)'))
 
     def calc_deltacl_rudder(self):
         self.calc_CL_alpha_v()
@@ -596,16 +596,6 @@ class Tail:
             self.z_tail = -(self.b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
             self.A_v = self.b**2/self.S_v
             print("Vertical stabiliser on Wingtips, A is {}".format(self.A_v))
-
-
-
-
-
-
-
-
-
-
 
 
     def Tail_positioning(self):

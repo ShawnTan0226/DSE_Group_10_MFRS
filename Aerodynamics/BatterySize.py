@@ -431,6 +431,7 @@ class Planform_calculation:
                 V_body_rectangle=V_batt_body-V_body_triangle
                 A_x=2*np.trapz(thickness,y_tot)
                 x_batt_body=V_body_rectangle/A_x
+                self.x_rect_batt=x_batt_body
                 x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
                 # plt.scatter(0,0.66666*self.plane.offset[1])
                 # plt.scatter(0,x_cg_rect)

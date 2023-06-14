@@ -24,6 +24,7 @@ class Plane:
         self.planename=planename
         self.ip=ip
         self.cg_list=0
+        self.x_rect_batt=0
 
         self.MAC_list=np.array([])
         self.x_list=np.array([])
@@ -72,7 +73,7 @@ class Plane:
 
         self.bfull=np.concatenate((self.b/2,self.b[::-1]/2,negative/2))
 
-    def plot_plane(self):
+    def plot_plane(self,show=True):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
         # plt.plot(np.concatenate((self.y_list,self.y_list[::-1],[self.y_list[0]])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1],[self.x_list[0]-0.25*self.MAC_list[0]])),color='red')
@@ -80,7 +81,8 @@ class Plane:
         # plt.scatter(self.y_list,self.x_list)
         # plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
         plt.gca().invert_yaxis()
-        plt.show()
+        if show:
+            plt.show()
     def add_text_to_file(self,file_path, text):
         with open(file_path, 'a') as file:
             file.write(text)
@@ -106,13 +108,15 @@ class Plane:
         print('c: ',self.c)
         print('b: ',self.b)
         print('offset: ',self.offset)
+        print('x_cg: ',self.x_cg)
+        print('MTOW: ',self.MTOW)
         return xflr
-    def drawbox(self,opacity):
+    def drawbox(self,opacity,show=True):
         frontbox=self.offset+0.15*self.c
         backbox=self.offset+0.65*self.c
         x_store=np.concatenate((frontbox,backbox[::-1]))
         x_store=np.concatenate((x_store,x_store[::-1]))
-        y=np.concatenate((self.b,self.b[::-1]))
+        y=np.concatenate((self.b/2,self.b[::-1]/2))
         y=np.concatenate((y,-y[::-1]))
 
         x_red=np.concatenate((self.offset,frontbox[::-1]))
@@ -126,7 +130,54 @@ class Plane:
         plt.fill(y,x_store, color='blue', alpha=opacity, label='Battery')
         plt.fill(y,x_red, color='orange', alpha=opacity)
         plt.fill(y,x_red2, color='orange', alpha=opacity)
-        plt.show()
+        if show:
+            plt.show()
+
+    def draw_battery_placement(self,opacity,show=True):
+
+        frontbox=(self.offset+0.15*self.c)[1:]
+        backbox=(self.offset+0.65*self.c)[1:]
+        x_store=np.concatenate((frontbox,backbox[::-1]))
+        y=np.concatenate((self.b[1:]/2,self.b[1:][::-1]/2))
+        y_neg=-y
+
+        
+        Triangle=(self.offset+0.15*self.c)[:-1]
+        Triangle=np.concatenate((Triangle,Triangle[::-1]))
+        y_triangle=np.concatenate((self.b[:-1]/2,-self.b[:-1][::-1]/2))
+
+        Rectangle=np.concatenate(([(self.offset+0.15*self.c)[1]],[(self.offset+0.15*self.c)[1]+self.x_rect_batt]))
+        Rectangle=np.concatenate((Rectangle,Rectangle[::-1]))
+        y_rect=np.array([self.b[1]/2,self.b[1]/2,-self.b[1]/2,-self.b[1]/2])
+
+        Computer=np.array([(self.offset+0.15*self.c)[1]+self.x_rect_batt,(self.offset+0.65*self.c)[1],(self.offset+0.65*self.c)[0]])
+        Computer=np.concatenate((Computer,Computer[::-1]))
+        y_comp=np.array([self.b[1]/2,self.b[1]/2,0,0,-self.b[1]/2,-self.b[1]/2])
+
+        frontbox_red=self.offset+0.15*self.c
+        backbox_red=self.offset+0.65*self.c
+        y_red=np.concatenate((self.b/2,self.b[::-1]/2))
+        y_red=np.concatenate((y_red,-y_red[::-1]))
+        x_red=np.concatenate((self.offset,frontbox_red[::-1]))
+        x_red=np.concatenate((x_red,x_red[::-1]))
+        x_red2=np.concatenate((self.offset+self.c,backbox_red[::-1]))
+        x_red2=np.concatenate((x_red2,x_red2[::-1]))
+
+        plt.plot(self.bfull,self.coords, color='black')
+        plt.gca().invert_yaxis()
+        plt.fill(y,x_store, color='blue', alpha=opacity)
+        plt.fill(y_neg,x_store, color='blue', alpha=opacity, label='Propulsion Battery')
+        plt.fill(y_triangle,Triangle, color='purple', alpha=opacity, label='propulsion + Battery',linewidth=0)
+        plt.fill(y_comp,Computer, color='green', alpha=opacity, label='Others')
+        plt.fill(y_rect,Rectangle, color='purple', alpha=opacity,linewidth=0)
+        plt.fill(y_red,x_red, color='orange', alpha=opacity)
+        plt.fill(y_red,x_red2, color='orange', alpha=opacity)
+        plt.legend()
+        if show:
+            plt.show()
+
+
+
 
     def drawtail(self,opacity):
         x_front=self.offset[-2:]
@@ -392,7 +443,7 @@ class Plane:
     #    x=0
 class Tail:
     def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
-                 thickness_v=0.12, def_rudder_emergency = 20, beta_max=30, Cl_alpha=2*np.pi,
+                 thickness_v=0.12, def_rudder_emergency = 15, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v
         self.Taper_v=taper_v

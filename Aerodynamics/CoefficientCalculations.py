@@ -28,18 +28,40 @@ class AerodynamicProperties:
         self.x_cg=self.plane.x_cg
         self.dihedral=self.plane.dihedral
 
-        self.x_tail=self.tail.x_tail
-        self.z_tail=self.tail.z_tail
+        self.iteration = tail.iteration
+
+        if self.iteration = 0: #Wingtips or body
+            self.x_tail=self.tail.x_tail
+            self.z_tail=self.tail.z_tail
 
 
-        self.Cl_alpha_v=self.tail.CL_alpha_v
-        self.sweep_half_v=self.tail.sweep_half_v
-        self.Av=self.tail.A_v
-        self.Sv=self.tail.S_v
+            self.Cl_alpha_v=self.tail.CL_alpha_v
+            self.sweep_half_v=self.tail.sweep_half_v
+            self.Av=self.tail.A_v
+            self.Sv=self.tail.S_v
 
-        self.l_v=self.x_tail-self.plane.x_cg
-        self.z_v=self.z_tail-0
-        
+            self.l_v=self.x_tail-self.plane.x_cg
+            self.z_v=self.z_tail-0
+
+        elif self.iteration = 1: #Wingtips + 1 vert. Stabiliser on body
+            self.x_tail_wt = tail.
+            self.x_tail_b =
+            self.z_tail_wt =
+            self.z_tail_b =
+
+                self.tail.x_tail
+            self.z_tail = self.tail.z_tail
+
+            self.Cl_alpha_v = self.tail.CL_alpha_v
+            self.sweep_half_v = self.tail.sweep_half_v
+            self.Av = self.tail.A_v
+            self.Sv = self.tail.S_v
+
+            self.l_v = self.x_tail - self.plane.x_cg
+            self.z_v = self.z_tail - 0
+
+
+
         self.h=h
         self.V=Steady_state.V
         self.C_L=Steady_state.CL

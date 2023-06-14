@@ -374,9 +374,9 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=4,
+    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
                  thickness_v=0.12, def_rudder_emergency = 10, beta_max=30, Cl_alpha=2*np.pi,
-                 sweep_half_v=0, V_stall = 50, density = 1.225):
+                 sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v
         self.Taper_v=taper_v
         self.V_s = V_stall
@@ -406,6 +406,8 @@ class Tail:
         self.dy_engine = self.plane.b[1]/2 #distance of engine from centerline is on the rib section
         self.l_engine = l_engine #length of ducted fan
         self.d_engine = d_engine #diameter of ducted fan
+
+        self.iteration = iteration
 
     def gradient(self, f, x, step):
         return (f(x + step) - f(x - step)) / (step * 2)
@@ -528,9 +530,7 @@ class Tail:
         self.S_v_wt = self.T_engine * self.dy_engine/(2*0.5 * (self.CL_alpha_v *self.beta_engine_fail + self.delta_cL_rudder
                                                     ) * self.density * self.V_s ** 2 * self.l_wt)
 
-        print('b',self.S_v_b)
-        print('wt',self.S_v_wt)
-        print('dy_engine', self.dy_engine)
+
 
         #Compare best option
         if self.S_v_b<self.S_v_wt:
@@ -581,9 +581,9 @@ class Tail:
     def funct_f_b_wt(self,S_v):
         self.calc_lv_b_wt(S_v)  # keep in the loop
         f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1+  0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt
-        print('Engine',- self.T_engine * self.dy_engine)
-        print('Wt',2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1)
-        print('Body',  0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt)
+        #print('Engine',- self.T_engine * self.dy_engine)
+        #print('Wt',2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1)
+        #print('Body',  0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt)
         #print('M_wt',2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1)
         #print('M_b',  (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder)*0.5* self.density * self.V_s ** 2 * S_v * self.l_v_b_wt, self.l_v_b_wt)
         return f
@@ -598,16 +598,26 @@ class Tail:
         self.MAC_wt1 = 2 / 3 * (cr_t + self.taper_v * cr_t + self.taper_v ** 2 * cr_t) / (1 + self.taper_v)
         self.S_v_wt1 = self.A_v * ((cr_t+self.taper_v*cr_t)/2)**2  # Surface for one of the wingtips
         self.l_v_wt1 = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg
+        #self.x_tail_wt1 =
+        #self.z_tail_wt1
 
-        self.S_v_b_wt1 = self.newtonRaphson_tail(self.funct_f_b_wt, 18, 0.005, 100, 0.00001, 0.75)[2]  # surface of body
+
+        #Body
+        self.S_v_b_wt1 = self.newtonRaphson_tail(self.funct_f_b_wt, 9, 0.005, 100, 0.00001, 0.75)[2]  # surface of body
         self.x_tail_b1 = self.l_v_b_wt + self.x_cg
         self.z_tail_b1 = self.z_v_b
         self.b_v_b1 = self.b_v_b
-        self.x_offset_engine = self.dy_engine / np.tan(self.beta_max_rad) - self.coords_bot[0] + self.coords_bot[
-            1] + self.l_engine
+        self.x_offset_engine = -(self.dy_engine / 2 / np.tan(self.beta_max_rad) - self.coords_bot[0] + self.coords_bot[
+            1] - self.l_engine/2)
 
         if self.x_offset_engine <= 0:
             self.x_offset_engine = 0
+
+        self.S_v = 2 * np.copy(self.S_v_wt1)+np.copy(self.S_v_b_wt1)  # Surface for both wingtips
+        #self.b = (self.S_v_wt / self.MAC_wt)
+        #self.x_tail = self.l_wt + self.x_cg
+        #self.z_tail = -(self.b) * (self.MAC_wt - cr_t) / (cr_t - self.taper_v * cr_t)
+        #self.A_v = self.b ** 2 / self.S_v
 
 
     def Tail_positioning(self):

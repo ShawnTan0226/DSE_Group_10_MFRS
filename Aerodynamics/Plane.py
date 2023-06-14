@@ -1,4 +1,5 @@
 import numpy as np
+import math as math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d
@@ -373,7 +374,7 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self, plane, eta, SrS, T_engine, d_engine, x_cg, taper_v=0.4, A_v=2,
+    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2,
                  thickness_v=0.12, def_rudder_emergency = 10, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225):
         self.A_v=A_v
@@ -402,12 +403,14 @@ class Tail:
         self.b_i=plane.b[1]
 
         self.T_engine = T_engine #Max thrust of one engine
-        self.d_engine = d_engine #distance of engine from centerline
+        self.dy_engine = self.plane.b[1] #distance of engine from centerline is on the rib section
+        self.l_engine = l_engine #length of ducted fan
+        self.d_engine = d_engine #diameter of ducted fan
 
     def gradient(self, f, x, step):
         return (f(x + step) - f(x - step)) / (step * 2)
 
-    def newtonRaphson(self, f, x0, e, N, h, relax):
+    def newtonRaphson_tail(self, f, x0, e, N, h, relax):
         #print('\n\n*** NEWTON RAPHSON METHOD IMPLEMENTATION ***')
         i = 0
         step = 1
@@ -435,6 +438,9 @@ class Tail:
                 print('\nNot Convergent.')
                 flag = 2
                 condition = False
+            if x1 <= 0:
+                condition = False
+                x1=1000
             i += 1
             #print('x1---', x1)
 
@@ -485,7 +491,7 @@ class Tail:
         cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
         self.min_dy = np.tan(self.beta_max_rad)*cr
 
-        MAC = 2/3 * (cr+self.taper_v*cr+self.taper_v**2*cr)/(1+self.taper_v)
+        MAC = 2/3 * cr*(1+self.taper_v+self.taper_v**2)/(1+self.taper_v)
         b = (self.A_v/S_v)**0.5
 
         self.zv = -(b)*(MAC-cr)/(cr-self.taper_v*cr)
@@ -500,31 +506,79 @@ class Tail:
         cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
         self.lv =self.x_v_end_body-self.x_cg-cr+self.x_v
 
-    def f(self,S_v):
+    def f_b(self,S_v):
         self.calc_lv(S_v)  # keep in the loop
-        f = - self.T_engine * self.d_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder
+        f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder
                                                         *(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * S_v * self.lv
         return f
+
+    def calc_xv_b_wt(self,S_v): #Body+wing tips
+        cr = (S_v/self.A_v)**0.5*2/(self.taper_v+1)
+        self.cr_test = cr
+        print('cr',cr)
+
+        MAC = 2/3 * cr*(1+self.taper_v+self.taper_v**2)/(1+self.taper_v)
+        self.MAC_test = MAC
+        self.b_v_b = (self.A_v/S_v)**0.5
+
+        self.z_v_b = -(self.b_v_b)*(MAC-cr)/(cr-self.taper_v*cr)
+
+        self.sweep_v = np.arctan((0.25*cr-0.25*MAC)/(self.z_v_b))
+
+        self.x_v_b_wt = np.tan(self.sweep_v)*self.z_v_b
+
+    def calc_lv_b_wt(self,S_v):
+        self.calc_xv_b_wt(S_v)
+        x_v_end_body = self.plane.coords_bot[0]
+        print(S_v)
+        cr = (S_v / self.A_v) ** 0.5 * 2 / (self.taper_v + 1)
+        self.l_v_b_wt = x_v_end_body - self.x_cg - cr + self.x_v_b_wt+5
+
+    def funct_f_b_wt(self,S_v):
+        self.calc_lv_b_wt(S_v)  # keep in the loop
+        f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder*(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1+ 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder*(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt
+        return f
+
+    #def check_engine_wake(self):
 
     def tail_sizing(self):
         self.calc_deltacl_rudder()
 
         #Body
-        self.S_v_b = self.newtonRaphson(self.f,9,0.01,100,0.00010,0.5)[2]
+        self.S_v_b = self.newtonRaphson_tail(self.f_b,9,0.01,10000,0.0001,0.5)[2]
         if self.S_v_b=="No solution found":
             self.S_v_b = 10000
 
         #Wingtips
         cr_t = self.plane.c[-1]
         self.MAC_wt = 2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
-
         self.l_wt = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
-        self.S_v_wt = self.T_engine * self.d_engine/(2*0.5 * (self.CL_alpha_v *self.beta_engine_fail + self.delta_cL_rudder
+        self.S_v_wt = self.T_engine * self.dy_engine/(2*0.5 * (self.CL_alpha_v *self.beta_engine_fail + self.delta_cL_rudder
                                                             *(self.beta_engine_fail+self.df_rad)) * self.density * self.V_s ** 2 * self.l_wt)
 
         print('b',self.S_v_b)
         print('wt',self.S_v_wt)
-        print('d_engine', self.d_engine)
+        print('dy_engine', self.dy_engine)
+
+        #Wingtips+body
+        cr_t = self.plane.c[-1]
+        self.MAC_wt1 =  2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
+        self.S_v_wt1 = self.A_v * self.MAC_wt1 #Surface for one of the wingtips
+        self.l_v_wt1 = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg
+
+
+        self.S_v_b_wt1 = self.newtonRaphson_tail(self.funct_f_b_wt,10,0.005,100,0.00001,0)[2] #surface of body
+        self.x_tail_b1 = self.l_v_b_wt + self.x_cg
+        self.z_tail_b1 = self.z_v_b
+        self.b_v_b1 = self.b_v_b
+        self.x_offset_engine = self.dy_engine/np.tan(self.beta_max_rad)-self.coords_bot[0]+self.coords_bot[1]+self.l_engine
+
+        if self.x_offset_engine<=0:
+            self.x_offset_engine=0
+
+        print('S_v_wt1',self.S_v_wt1)
+        print('self.S_v_b_wt1',self.S_v_b_wt1)
+        print('x_offset', self.x_offset_engine)
 
         #Compare best option
         if self.S_v_b<self.S_v_wt:

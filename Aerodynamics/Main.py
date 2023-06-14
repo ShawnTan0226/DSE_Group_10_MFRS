@@ -32,13 +32,33 @@ eta =1
 SrS =0.36 # based on cessna citation 500 - Roskam
 T_engine = 5600 #[N]
 d_engine = 3 #[m] distance of 1 engine from centerline
+l_engine = 2
 
 
 Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,0.4)
 plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
-tail = Tail(plane,eta,SrS,T_engine,d_engine,x_cg)
+tail = Tail(plane,eta,SrS,T_engine,l_engine, d_engine,x_cg)
 tail.tail_sizing()
+
+# Define the function to plot
+
+# Generate x values
+x = np.linspace(-10, 30)
+
+# Generate y values by applying the function to each x value
+y = tail.funct_f_b_wt(x)
+
+# Create the plot
+plt.plot(x, y)
+
+# Add labels and title
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.title('Plot of f(x) = f(S_v)')
+
+# Display the plot
+plt.show()
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
 for i in range(10):
@@ -54,8 +74,9 @@ for i in range(10):
 
     
     LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
-    tail = Tail(plane,eta,SrS,T_engine,d_engine,x_cg)
+    tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
     tail.tail_sizing()
+
 
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 

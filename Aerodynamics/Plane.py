@@ -630,6 +630,7 @@ class Tail:
 
         self.z_v_b = -(self.b_v_b)*(MAC-cr)/(cr-self.taper_v*cr)
 
+
         self.sweep_v = np.arctan((0.25*cr-0.25*MAC)/(self.z_v_b))
 
         self.x_v_b_wt = np.tan(self.sweep_v)*self.z_v_b+0.25*cr
@@ -691,6 +692,19 @@ class Tail:
         self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips and body VS
         self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
 
+    def tail_dimensions(self, S_v):
+        self.tail_sizing_2()
+        self.calc_xv_b_wt(S_v)
+        self.calc_lv_b_wt(S_v)
+        # Assign variables
+        self.A_v_b1 = self.A_v
+        self.b_v_b1 = np.copy(self.b_v_b)
+        self.l_v_b1 = np.copy(self.l_v_b_wt)
+        self.x_tail_b1 = self.l_v_b1 + self.x_cg
+        self.z_tail_b1 = np.copy(self.z_v_b)
+
+        self.S_v_tot = 2 * self.S_v_wt1 + S_v  # Surface for both wingtips and body VS
+        self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + S_v * self.x_tail_b1) / (self.S_v_tot)
 
     def Tail_positioning(self):
         if self.coords_bot[-1]>self.coords_bot[0] and self.plane.b[1]<self.min_dy:

@@ -470,7 +470,7 @@ class AerodynamicProperties:
             #Wingtips
             C_n_p_v_wt = -2/self.b**2 * ((self.l_v_wt*np.cos(self.aoa)+self.z_tail_wt*np.sin(self.aoa))*(self.z_tail_wt*np.cos(self.aoa)-self.l_v_wt*np.sin(self.aoa)-self.z_tail_wt))*self.C_Y_b_v_wt
             #Body
-            C_n_p_v_b = = -2/self.b**2 * ((self.l_v_b*np.cos(self.aoa)+self.z_tail_b*np.sin(self.aoa))*(self.z_tail_b*np.cos(self.aoa)-self.l_v_b*np.sin(self.aoa)-self.z_tail_b))*self.C_Y_b_v_b
+            C_n_p_v_b = -2/self.b**2 * ((self.l_v_b*np.cos(self.aoa)+self.z_tail_b*np.sin(self.aoa))*(self.z_tail_b*np.cos(self.aoa)-self.l_v_b*np.sin(self.aoa)-self.z_tail_b))*self.C_Y_b_v_b
             self.C_n_p_v = C_n_p_v_b+C_n_p_v_wt*2
         if self.iteration == 0:
             self.C_n_p_v=-2/self.b**2 * ((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v

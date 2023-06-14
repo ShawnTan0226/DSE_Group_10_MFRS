@@ -47,7 +47,8 @@ class AerodynamicProperties:
             #wingtips
             self.A_v_wt = tail.A_v_wt1
             self.MAC_wt =tail.MAC_wt1
-            self.S_v_wt = tail.S_v_wt1
+            self.S_v_wt1 = tail.S_v_wt1 #Surface of one wingtip
+            self.S_v_wt2 = tail.S_v_wt2 #Total surface of both wingtips
             self.b_v_wt= tail.b_v_wt1
             self.x_tail_wt = tail.x_tail_wt1 #distance from tip to ac
             self.l_v_wt = tail.l_v_wt1 #distance from cg to ac
@@ -62,8 +63,9 @@ class AerodynamicProperties:
             self.l_v_b = tail.l_v_b1  # distance from cg to ac
             self.z_tail_b = tail.z_tail_b1
 
-            self.sweep_half_v = self.tail.sweep_half_v
-            self.Cl_alpha_v = self.tail.CL_alpha_v
+            self.sweep_half_v = tail.sweep_half_v
+            self.Cl_alpha_v = tail.CL_alpha_v
+            self.S_v_tot = tail.S_v_tot
 
 
 
@@ -309,18 +311,44 @@ class AerodynamicProperties:
         #wing
         self.C_Y_b_w = -0.00573 * np.rad2deg(self.dihedral)  # dihedral in deg
 
-        #single vertical tail
-        constant = 0.724 + 3.06*((self.Sv/self.plane.S)/(1+np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A #
-        print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386)")
-        AvfAv= 1 #float(input('Avf/Av (if you dont know assume 1)'))
-        Av_hfAvf = 1.2 # float(input('Avf/Av (if you dont know assume 1.2)'))
-        Kvh = 1.2 #float(input('Kvh (if you dont know assume 1.2)'))
-        self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
-        self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
+        if self.iteration == 1:
+            #Wingtip
+            print(
+                "Considering the wingtip vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386 - fig. 10.13 + fig. 10.14)")
+            AvfAv = 1  # float(input('Avf/Av (if you dont know assume 1)'))
+            Av_hfAvf = 1.2  # float(input('Avf/Av (if you dont know assume 1.2)'))
+            Kvh = 1.2  # float(input('Kvh (if you dont know assume 1.2)'))
+            self.A_v_eff = AvfAv * self.Av * (1 + Kvh * ((Av_hfAvf) - 1))
+            constant_wt = 0.724 + 3.06 * ((self.S_v_wt1 / self.plane.S) / (1 + np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A
+            self.C_Y_b_v_wt = -1*self.Cl_alpha_v * constant_wt *self.S_v_wt1/self.plane.S
 
-        # Assuming bv/2ri>3.5-> kv=1
-        self.C_Y_b_v = -1*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
-        # Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
+            #Body
+            print(
+                "Considering the body vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386 - fig. 10.13 + fig. 10.14)")
+            AvfAv = 1  # float(input('Avf/Av (if you dont know assume 1)'))
+            Av_hfAvf = 1.2  # float(input('Avf/Av (if you dont know assume 1.2)'))
+            Kvh = 1.2  # float(input('Kvh (if you dont know assume 1.2)'))
+            self.A_v_eff = AvfAv * self.Av * (1 + Kvh * ((Av_hfAvf) - 1))
+            constant_wt = 0.724 + 3.06 * (
+                        (self.S_v_b / self.plane.S) / (1 + np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A
+            self.C_Y_b_v_b = -1 * self.Cl_alpha_v * constant_wt * self.S_v_b / self.plane.S
+
+            self.C_Y_b_v = 2*self.C_Y_b_v_wt+self.C_Y_b_v_b
+
+        if self.iteration == 0:
+            #single vertical tail
+            constant = 0.724 + 3.06*((self.Sv/self.plane.S)/(1+np.cos(self.plane.sweep_eq))) + 0.009 * self.plane.A #
+            print("Considering the vertical stabiliser airfoil and placement what are the following values ? (Roskam 6 - p. 386)")
+            AvfAv= 1 #float(input('Avf/Av (if you dont know assume 1)'))
+            Av_hfAvf = 1.2 # float(input('Avf/Av (if you dont know assume 1.2)'))
+            Kvh = 1.2 #float(input('Kvh (if you dont know assume 1.2)'))
+            self.A_v_eff = AvfAv * self.Av * (1+ Kvh*((Av_hfAvf)-1))
+            self.C_L_alpha_v = 2*np.pi*self.A_v_eff / (2+((self.A_v_eff**2/(self.Cl_alpha_v/(2*np.pi))**2)*(1+(np.tan(self.sweep_half_v))**2)+4)**0.5) #omiting beta correction eq. 8.22
+
+            # Assuming bv/2ri>3.5-> kv=1
+            self.C_Y_b_v = -1*self.C_L_alpha_v * constant *self.Sv/self.plane.S ##Roskam 6 eq.10.28, kv=1 - Roskam 6 fig. 10.12
+            # Simplify instead of eq.10.32 Roskam 6, omits effect of vertical stabiliser on each other
+
 
         #Final C_Y_beta
         self.C_Y_b =  self.C_Y_b_w + self.C_Y_b_v
@@ -329,30 +357,53 @@ class AerodynamicProperties:
 
     def calc_C_l_beta(self): #eq: 10.34 Roskam 6
 
-        print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 393)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))#Use of sweep equivalent
-        clbetacLwf = -0.002 #float(input("What is Cl_beta/CL from fig. 10.20"))
+        print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 393)".format(
+            np.rad2deg(self.plane.sweep_eq_half), self.plane.A, self.plane.taper_eq))  # Use of sweep equivalent
+        clbetacLwf = -0.002  # float(input("What is Cl_beta/CL from fig. 10.20"))
 
-        print("Considering: Aspect ratio {} and Taper ratio {}".format(self.plane.A,self.plane.taper_eq))
-        clbetacLA = 0 #float(input("What is Cl_beta/CL from fig. 10.23"))
+        print("Considering: Aspect ratio {} and Taper ratio {}".format(self.plane.A, self.plane.taper_eq))
+        clbetacLA = 0  # float(input("What is Cl_beta/CL from fig. 10.23"))
 
-        print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 395)".format(np.rad2deg(self.plane.sweep_eq_half),self.plane.A,self.plane.taper_eq))
-        clbetadihed = -0.00017#float(input("What is Cl_beta/dihedral from fig. 10.24"))
+        print("Considering: sweep at half chord {}, Aspect ratio {} and Taper ratio {}? (Roskam 6 - p. 395)".format(
+            np.rad2deg(self.plane.sweep_eq_half), self.plane.A, self.plane.taper_eq))
+        clbetadihed = -0.00017  # float(input("What is Cl_beta/dihedral from fig. 10.24"))
 
-        print("Considering:Aspect ratio {} and Taper ratio {} (Roskam 6 - p. 396)".format(self.plane.A,self.plane.taper_eq))
-        x = -0.000025#float(input("What is the dCL/(epsilon*tan(sweep)) from fig 10.26"))
+        print("Considering:Aspect ratio {} and Taper ratio {} (Roskam 6 - p. 396)".format(self.plane.A,
+                                                                                          self.plane.taper_eq))
+        x = -0.000025  # float(input("What is the dCL/(epsilon*tan(sweep)) from fig 10.26"))
+
+        if self.iteration == 1:
+            # Wnigtip
+            self.C_l_beta_v_wt = self.C_Y_b_v_wt * (self.z_tail_wt * np.cos(self.aoa) - self.l_v_wt * np.sin(self.aoa)) / \
+                                 self.plane.b[-1]  # Roskam 6 eq. 10.34
+            #Body
+            self.C_l_beta_v_b = self.C_Y_b_v_b * (self.z_tail_b * np.cos(self.aoa) - self.l_v_b * np.sin(self.aoa)) / \
+                                 self.plane.b[-1]  # Roskam 6 eq. 10.34
+            self.C_l_beta_v = self.C_l_beta_v_b+2*self.C_l_beta_v_wt
+
+        if self.iteration == 0:
+            #Vertical Tail
+            self.C_l_beta_v = self.C_Y_b_v*(self.z_v*np.cos(self.aoa) - self.l_v*np.sin(self.aoa))/self.plane.b[-1] #Roskam 6 eq. 10.34
 
         #Wing-fuselage
         self.C_l_beta_wf = 57.3*(self.C_L*(clbetacLwf*1*1 + clbetacLA) + self.dihedral*clbetadihed + x * self.plane.twist[-1] * np.tan(self.plane.sweep_eq))#Assumed no compressibility correction, fuselage correction =1 since no fuselage
 
-        #Vertical Tail
-        self.C_l_beta_v = self.C_Y_b_v*(self.z_v*np.cos(self.aoa) - self.l_v*np.sin(self.aoa))/self.plane.b[-1] #Roskam 6 eq. 10.34
 
         self.C_l_beta = self.C_l_beta_v+self.C_l_beta_wf
 
         self.coefficients['C_l_beta'] = self.C_l_beta
 
     def calc_C_n_beta(self): #eq: 10.35 Roskam 6
-        self.C_n_beta=-self.C_Y_b_v*(self.l_v*np.cos(self.aoa) + self.z_v*np.sin(self.aoa))/self.plane.b[-1]
+        if self.iteration == 1:
+            #Wingtips
+            C_n_beta_wt=-self.C_Y_b_v_wt*(self.l_v_wt*np.cos(self.aoa) + self.z_tail_wt*np.sin(self.aoa))/self.plane.b[-1]
+
+            #Body
+            C_n_beta_b = -self.C_Y_b_v_b*(self.l_v_b*np.cos(self.aoa) + self.z_tail_b*np.sin(self.aoa))/self.plane.b[-1]
+
+            self.C_n_beta = 2*C_n_beta_wt+C_n_beta_b
+        if self.iteration == 0:
+            self.C_n_beta=-self.C_Y_b_v*(self.l_v*np.cos(self.aoa) + self.z_v*np.sin(self.aoa))/self.plane.b[-1]
 
         self.coefficients['C_n_beta'] = self.C_n_beta
 
@@ -363,7 +414,17 @@ class AerodynamicProperties:
 
     #----------------Roll rate derivatives----------------
     def calc_C_Y_p(self):
-        self.C_Y_p=2*self.C_Y_b_v*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b
+        if self.iteration == 1:
+            #Wingtips
+            C_Y_p_wt = 2*self.C_Y_b_v_wt*(self.z_tail_wt*np.cos(self.aoa)-self.l_v_wt*np.sin(self.aoa)-self.z_tail_wt)/self.b
+
+            #Body
+            C_Y_p_b = 2 * self.C_Y_b_v_b * (
+                        self.z_tail_b * np.cos(self.aoa) - self.l_v_b * np.sin(self.aoa) - self.z_tail_b) / self.b
+            self.C_Y_p = 2*C_Y_p_wt+C_Y_p_b
+
+        if self.iteration == 2:
+            self.C_Y_p=2*self.C_Y_b_v*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b
 
         self.coefficients['C_Y_p'] = self.C_Y_p
 
@@ -380,8 +441,19 @@ class AerodynamicProperties:
         Deltaclp_drag=Clp_CL2*self.C_L**2-0.125*self.C_D_0
 
         c_l_p_w=BetaClp_k*k/Beta_Comp*1+Deltaclp_drag
-        c_l_p_v=2/self.plane.b_tot**2 * ((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
-        self.C_l_p=c_l_p_w+c_l_p_v
+        if self.iteration == 1:
+            #Wingtips
+            c_l_p_v_wt = 2 / self.plane.b_tot ** 2 * ((self.z_tail_wt * np.cos(self.aoa) - self.l_v_wt * np.sin(self.aoa)) * (
+                        self.z_tail_wt * np.cos(self.aoa) - self.l_v_wt * np.sin(self.aoa) - self.z_tail_wt)) * self.C_Y_b_v_wt
+            #Body
+            c_l_p_v_b = 2 / self.plane.b_tot ** 2 * ((self.z_tail_b * np.cos(self.aoa) - self.l_v_b * np.sin(self.aoa)) * (
+                        self.z_tail_b * np.cos(self.aoa) - self.l_v_b * np.sin(self.aoa) - self.z_tail_b)) * self.C_Y_b_v_b
+            self.c_l_p_v = 2*c_l_p_v_wt + c_l_p_v_b
+
+        if self.iteration == 0:
+            self.c_l_p_v=2/self.plane.b_tot**2 * ((self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+
+        self.C_l_p=c_l_p_w+self.c_l_p_v
 
         self.coefficients["C_l_p"]=self.C_l_p
     
@@ -393,7 +465,16 @@ class AerodynamicProperties:
         xbar_cbar=0.25
         C_n_p_CL=-1/6*(A+6*(A+np.cos(Sweep))*(xbar_cbar*np.tan(Sweep)/A+np.tan(Sweep)**2/12))/(A+4*np.cos(Sweep))
         self.C_n_p_w=C_n_p_CL*self.C_L+Cnp_eps*self.plane.twist[-1]
-        self.C_n_p_v=-2/self.b**2 * ((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+
+        if self.iteration == 1:
+            #Wingtips
+            C_n_p_v_wt = -2/self.b**2 * ((self.l_v_wt*np.cos(self.aoa)+self.z_tail_wt*np.sin(self.aoa))*(self.z_tail_wt*np.cos(self.aoa)-self.l_v_wt*np.sin(self.aoa)-self.z_tail_wt))*self.C_Y_b_v_wt
+            #Body
+            C_n_p_v_b = = -2/self.b**2 * ((self.l_v_b*np.cos(self.aoa)+self.z_tail_b*np.sin(self.aoa))*(self.z_tail_b*np.cos(self.aoa)-self.l_v_b*np.sin(self.aoa)-self.z_tail_b))*self.C_Y_b_v_b
+            self.C_n_p_v = C_n_p_v_b+C_n_p_v_wt*2
+        if self.iteration == 0:
+            self.C_n_p_v=-2/self.b**2 * ((self.l_v*np.cos(self.aoa)+self.z_v*np.sin(self.aoa))*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v))*self.C_Y_b_v
+
         self.C_n_p=self.C_n_p_w+self.C_n_p_v
 
         self.coefficients["C_n_p"]=self.C_n_p
@@ -404,8 +485,18 @@ class AerodynamicProperties:
         #NOTE: incorporate x_ac_v and z_ac_b and z_cg in the plane object code
 
         # self.calc_C_Y_beta()
+        if self.iteration == 1:
+            #Wingtip
+            C_Y_r_wt = -2 * self.C_Y_b_v_wt * (self.l_v_wt * np.cos(self.aoa) + self.z_tail_wt * np.sin(self.aoa)) / self.plane.b[-1]
 
-        self.C_Y_r = -2 * self.C_Y_b_v * (self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa)) / self.plane.b[-1]
+            #Body
+            C_Y_r_b = -2 * self.C_Y_b_v_b * (self.l_v_b * np.cos(self.aoa) + self.z_tail_b * np.sin(self.aoa)) / \
+                       self.plane.b[-1]
+
+            self.C_Y_r = 2* C_Y_r_wt + C_Y_r_b
+
+        if self.iteration == 0:
+            self.C_Y_r = -2 * self.C_Y_b_v * (self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa)) / self.plane.b[-1]
 
         self.coefficients['C_Y_r'] = self.C_Y_r
 
@@ -431,11 +522,21 @@ class AerodynamicProperties:
         self.dflaps = 0 #Assume no flaps 
         self.aoa_dflaps = 0 #assume 0 because flaps is 0 but technically
 
+        self.C_l_r_w = (self.C_L) * self.C_l_r_slope + self.C_l_r_gamma * self.dihedral + self.C_l_r_epsilon * \
+                       self.twist[-1] + self.C_l_r_dflaps * self.aoa_dflaps * self.dflaps
 
-        self.C_l_r_w = (self.C_L) * self.C_l_r_slope + self.C_l_r_gamma * self.dihedral + self.C_l_r_epsilon * self.twist[-1] + self.C_l_r_dflaps * self.aoa_dflaps * self.dflaps
+        if self.iteration == 1:
+            #Wingtips
+            C_l_r_wt = -(2/(self.plane.b[-1]**2)) * (self.l_v_wt * np.cos(self.aoa) + self.z_tail_wt * np.sin(self.aoa)) * \
+                       (self.z_tail_wt * np.cos(self.aoa) - self.l_v_wt * np.sin(self.aoa)) * self.C_Y_b_v_wt
+            #Body
+            C_l_r_b = -(2 / (self.plane.b[-1] ** 2)) * (
+                        self.l_v_b * np.cos(self.aoa) + self.z_tail_b * np.sin(self.aoa)) * \
+                       (self.z_tail_b * np.cos(self.aoa) - self.l_v_b * np.sin(self.aoa)) * self.C_Y_b_v_b
+            self.C_l_r_v = 2* C_l_r_wt + C_l_r_b
 
-
-        self.C_l_r_v = -(2/(self.plane.b[-1]**2)) * (self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa)) * \
+        if self.iteration == 0:
+            self.C_l_r_v = -(2/(self.plane.b[-1]**2)) * (self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa)) * \
                        (self.z_v * np.cos(self.aoa) - self.l_v * np.sin(self.aoa)) * self.C_Y_b_v
 
         self.C_l_r = self.C_l_r_w + self.C_l_r_v
@@ -453,7 +554,16 @@ class AerodynamicProperties:
 
         self.C_n_r_w = self.C_n_r_cl * self.C_L**2 + self.C_n_r_cd0 * self.C_D_0
 
-        self.C_n_r_v = (2/(self.plane.b[-1]**2)) * ((self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa))**2) * self.C_Y_b_v
+        if self.iteration == 1:
+            #Wingtips
+            C_n_r_v_wt = (2 / (self.plane.b[-1] ** 2)) * (
+                        (self.l_v_wt * np.cos(self.aoa) + self.z_tail_wt * np.sin(self.aoa)) ** 2) * self.C_Y_b_v_wt
+            #Body
+            C_n_r_v_b = (2 / (self.plane.b[-1] ** 2)) * (
+                        (self.l_v_b * np.cos(self.aoa) + self.z_tail_b * np.sin(self.aoa)) ** 2) * self.C_Y_b_v_b
+            self.C_n_r_v = C_n_r_v_wt*2 + C_n_r_v_b
+        if self.iteration == 0:
+            self.C_n_r_v = (2/(self.plane.b[-1]**2)) * ((self.l_v * np.cos(self.aoa) + self.z_v * np.sin(self.aoa))**2) * self.C_Y_b_v
 
         self.C_n_r = self.C_n_r_w + self.C_n_r_v
 

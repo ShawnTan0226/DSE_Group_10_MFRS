@@ -615,6 +615,7 @@ class Tail:
         cr_t = self.plane.c[-1]
         self.MAC_wt1 = 2 / 3 * (cr_t + self.taper_v * cr_t + self.taper_v ** 2 * cr_t) / (1 + self.taper_v)
         self.S_v_wt1 = self.A_v_wt1 * ((cr_t+self.taper_v*cr_t)/2)**2  # Surface for one of the wingtips
+        self.S_v_wt2 = 2 * self.S_v_wt1
         self.b_v_wt1 = (self.S_v_wt1*self.A_v_wt1)**0.5
         self.x_tail_wt1 = -0.75 * cr_t + self.coords_bot[-1]
         self.l_v_wt1 = self.x_tail_wt1 - self.x_cg
@@ -636,7 +637,7 @@ class Tail:
         if self.x_offset_engine <= 0:
             self.x_offset_engine = 0
         print(self.S_v_wt1,self.S_v_b1)
-        self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips
+        self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips and body VS
         self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
 
 

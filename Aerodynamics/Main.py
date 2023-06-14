@@ -47,11 +47,9 @@ tail.funct_f_b_wt(2.215)
 # Define the function to plot
 
 # Generate x values
-x = np.linspace(-10, 100)
+x = np.linspace(-10, 20)
 
 # Generate y values by applying the function to each x value
-y = tail.funct_f_b_wt(x)
-
 # Create the plot
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
@@ -75,12 +73,17 @@ for i in range(10):
 
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail_wt1,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
+y = tail.funct_f_b_wt(x)
+plt.plot(x,y)
+plt.show()
+
 
 print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
 plot_plane_confiig=True
 plot_payload_config=True
+record=False
 if plot_plane_confiig:
     if plot_payload_config:
         plane.draw_battery_placement(0.5,False)
@@ -98,7 +101,6 @@ if plot_plane_confiig:
 
 
 plane.calculate_MOI(0,0,0)
-plane.record_planform()
 
 trim=Trim(0.5, 0.02, 0.02,110,4.75)
 
@@ -118,11 +120,14 @@ print('new_CL_max',Cs.CL_max_new)
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()
-Stability.record_stability()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
 print('A---',Stability.A_asymm,'\nB---',Stability.B_asymm,'\nC---',Stability.C_asymm,'\nD---',Stability.D_asymm,'\nE---',Stability.E_asymm)
 print(Stability.Routh_discriminant())
 
+
+if record:
+    plane.record_planform()
+    Stability.record_stability()
 '''
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])
 

@@ -31,9 +31,11 @@ class Sectional_Properties:
     def run(self):
         self.airfoil = self.DefineAirfoil()
         self.a_cell = self.CellGen()
-        plt.plot(self.airfoil['x'],np.arange(len(self.airfoil['x'])))#, self.airfoil['y'])
+        plt.plot(self.airfoil['x'], self.airfoil['y'])
+        plt.plot([0.15,0.15],[-0.08,0.08])
+        plt.plot([0.55, 0.55], [-0.08, 0.08])
 
-        #plt.axis('equal')
+        plt.axis('equal')
         plt.show()
 
 SectionalProperties = Sectional_Properties()

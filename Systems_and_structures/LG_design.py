@@ -18,7 +18,7 @@ class LandingGear:
         # Assumed initial MLG position
         self.pos_x_MLG = self.xcg + 0.15 * self.MAC
         # NLG distance flowing from this
-        load_percentage_NLG = 0.1   # Set percentage of MTOW NLG supports
+        load_percentage_NLG = 0.15   # Set percentage of MTOW NLG supports
         self.pos_x_NLG = (self.xcg - self.pos_x_MLG*(1-load_percentage_NLG))/load_percentage_NLG
 
         # Find wingtip distance
@@ -57,7 +57,7 @@ class LandingGear:
         w = self.height_MLG / np.tan(self.ang_tip)
         # Angle from NLG to half track width
         beta = np.arcsin(w / (self.xcg - self.pos_x_NLG))
-        self.track_width_MLG = 2 * np.tan(beta) * (self.pos_x_MLG - self.pos_x_NLG)
+        self.track_width_MLG = np.max([5,2 * np.tan(beta) * (self.pos_x_MLG - self.pos_x_NLG)])
 
         # Lateral clearance
         if pusher:

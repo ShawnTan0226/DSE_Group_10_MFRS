@@ -1,10 +1,11 @@
 import numpy as np
+import math as math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d
 #TODO: Implement multiple airfoil
 class Plane:
-    def __init__(self,Cri,taper,sweep,b,twist=[0,0],dihedral=0,planename='Main.csv',ip=0,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
+    def __init__(self,Cri,taper,sweep,b,Volume,twist=[0,0],dihedral=0,planename='Main.csv',ip=0,h=5000,V=110,airfoil=".\Airfoil_dat\MH 91  14.98%.dat", number_of_tail=1):
         #Plane object has n sections
         self.c=np.array([Cri]) #array of chord [m] form: [Middle c,c1,c2,c3,...,cn]
         self.taper = np.array(taper) #array of taper ratio form: [taper1,taper2,taper3,...,tapern]
@@ -13,6 +14,7 @@ class Plane:
         self.dihedral = np.deg2rad(dihedral)
         self.b = np.concatenate(([0],b)) #array of span [m] form: [0,b1,b2,b3,...,bn]
         self.S_list=np.array([]) #array of surface area of each section [m^2] form: [S1,S2,S3,...,Sn]
+        self.battery_volume=Volume #volume of the plane [m^3]
         
         self.b_tot=self.b[-1] #total span [m]
         self.coords=np.array([])
@@ -21,6 +23,8 @@ class Plane:
 
         self.planename=planename
         self.ip=ip
+        self.cg_list=0
+        self.x_rect_batt=0
 
         self.MAC_list=np.array([])
         self.x_list=np.array([])
@@ -30,6 +34,7 @@ class Plane:
         self.MAC_aircraft()
         self.equivalent_wing()
         self.define_airfoil(airfoil)
+
 
         self.tailnumber = number_of_tail
 
@@ -68,15 +73,42 @@ class Plane:
 
         self.bfull=np.concatenate((self.b/2,self.b[::-1]/2,negative/2))
 
-    def plot_plane(self):
+    def plot_plane(self,show=True):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
+        
+        Engine=np.array([self.coords_bot[1]-0.3,self.coords_bot[1]+1])
+        Engine=np.concatenate((Engine,Engine[::-1],[self.coords_bot[1]-0.3]))
+        y_engine=np.array([self.b[1]/2+1.3,self.b[1]/2+1.3,self.b[1]/2-1.3,self.b[1]/2-1.3,self.b[1]/2+1.3])
+        plt.fill(y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.fill(-y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.plot(y_engine,Engine,color='black',zorder=7)
+        plt.plot(-y_engine,Engine,color='black',zorder=7)
+        plt.fill(y_engine,Engine, color='grey',alpha=0.8,zorder=6)
+        plt.fill(-y_engine,Engine, color='grey',alpha=0.8, label='Engine',zorder=6)
         # plt.plot(np.concatenate((self.y_list,self.y_list[::-1],[self.y_list[0]])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1],[self.x_list[0]-0.25*self.MAC_list[0]])),color='red')
         # plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
         # plt.scatter(self.y_list,self.x_list)
         # plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
         plt.gca().invert_yaxis()
-        plt.show()
+        if show:
+            plt.show()
+    def add_text_to_file(self,file_path, text):
+        with open(file_path, 'a') as file:
+            file.write(text)
+    
+    def record_planform(self):
+        text='S: '+str(self.S)+'\nb: '+str(self.b)+'\nc: '+str(self.c)+'\ntaper: '+str(self.taper)+'\nsweep: '+str(self.sweep)+'\nA: '+str(self.A)+'\nMAC: '+str(self.MAC)+'\n\n'
+        print(text)
+        self.add_text_to_file('./Record/Planform record.txt', text)
+
+    def get_planform(self):
+        print('S: ',self.S)
+        print('b: ',self.b)
+        print('c: ',self.c)
+        print('taper: ',self.taper)
+        print('sweep: ',self.sweep)
+
 
     def xflrvelues(self):
         xflr={}
@@ -86,13 +118,15 @@ class Plane:
         print('c: ',self.c)
         print('b: ',self.b)
         print('offset: ',self.offset)
+        print('x_cg: ',self.x_cg)
+        print('MTOW: ',self.MTOW)
         return xflr
-    def drawbox(self,opacity):
+    def drawbox(self,opacity,show=True):
         frontbox=self.offset+0.15*self.c
         backbox=self.offset+0.65*self.c
         x_store=np.concatenate((frontbox,backbox[::-1]))
         x_store=np.concatenate((x_store,x_store[::-1]))
-        y=np.concatenate((self.b,self.b[::-1]))
+        y=np.concatenate((self.b/2,self.b[::-1]/2))
         y=np.concatenate((y,-y[::-1]))
 
         x_red=np.concatenate((self.offset,frontbox[::-1]))
@@ -106,7 +140,64 @@ class Plane:
         plt.fill(y,x_store, color='blue', alpha=opacity, label='Battery')
         plt.fill(y,x_red, color='orange', alpha=opacity)
         plt.fill(y,x_red2, color='orange', alpha=opacity)
-        plt.show()
+        if show:
+            plt.show()
+
+    def draw_battery_placement(self,opacity,show=True):
+
+        frontbox=(self.offset+0.15*self.c)[1:]
+        backbox=(self.offset+0.65*self.c)[1:]
+        x_store=np.concatenate((frontbox,backbox[::-1]))
+        y=np.concatenate((self.b[1:]/2,self.b[1:][::-1]/2))
+        y_neg=-y
+
+        
+        Triangle=(self.offset+0.15*self.c)[:-1]
+        Triangle=np.concatenate((Triangle,Triangle[::-1]))
+        y_triangle=np.concatenate((self.b[:-1]/2,-self.b[:-1][::-1]/2))
+
+        Rectangle=np.concatenate(([(self.offset+0.15*self.c)[1]],[(self.offset+0.15*self.c)[1]+self.x_rect_batt]))
+        Rectangle=np.concatenate((Rectangle,Rectangle[::-1]))
+        y_rect=np.array([self.b[1]/2,self.b[1]/2,-self.b[1]/2,-self.b[1]/2])
+
+        Engine=np.array([self.coords_bot[1]-0.3,self.coords_bot[1]+1])
+        Engine=np.concatenate((Engine,Engine[::-1],[self.coords_bot[1]-0.3]))
+        y_engine=np.array([self.b[1]/2+1.3,self.b[1]/2+1.3,self.b[1]/2-1.3,self.b[1]/2-1.3,self.b[1]/2+1.3])
+
+        Computer=np.array([(self.offset+0.15*self.c)[1]+self.x_rect_batt,(self.offset+0.65*self.c)[1],(self.offset+0.65*self.c)[0]])
+        Computer=np.concatenate((Computer,Computer[::-1]))
+        y_comp=np.array([self.b[1]/2,self.b[1]/2,0,0,-self.b[1]/2,-self.b[1]/2])
+
+        frontbox_red=self.offset+0.15*self.c
+        backbox_red=self.offset+0.65*self.c
+        y_red=np.concatenate((self.b/2,self.b[::-1]/2))
+        y_red=np.concatenate((y_red,-y_red[::-1]))
+        x_red=np.concatenate((self.offset,frontbox_red[::-1]))
+        x_red=np.concatenate((x_red,x_red[::-1]))
+        x_red2=np.concatenate((self.offset+self.c,backbox_red[::-1]))
+        x_red2=np.concatenate((x_red2,x_red2[::-1]))
+
+        plt.plot(self.bfull,self.coords, color='black')
+        plt.gca().invert_yaxis()
+        plt.fill(y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.fill(-y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.plot(y_engine,Engine,color='black',zorder=7)
+        plt.plot(-y_engine,Engine,color='black',zorder=7)
+        plt.fill(y_engine,Engine, color='red',alpha=0.6,zorder=6)
+        plt.fill(-y_engine,Engine, color='red',alpha=0.6, label='Engine',zorder=6)
+        plt.fill(y,x_store, color='blue', alpha=opacity)
+        plt.fill(y_neg,x_store, color='blue', alpha=opacity, label='Propulsion Battery')
+        plt.fill(y_triangle,Triangle, color='purple', alpha=opacity, label='propulsion + Battery',linewidth=0)
+        plt.fill(y_comp,Computer, color='green', alpha=opacity, label='Others')
+        plt.fill(y_rect,Rectangle, color='purple', alpha=opacity,linewidth=0)
+        plt.fill(y_red,x_red, color='orange', alpha=opacity)
+        plt.fill(y_red,x_red2, color='orange', alpha=opacity)
+        plt.legend()
+        if show:
+            plt.show()
+
+
+
 
     def drawtail(self,opacity):
         x_front=self.offset[-2:]
@@ -225,6 +316,8 @@ class Plane:
         self.pylon_cg = pylon_cg
         self.vertical_tail_cg = vertical_tail_cg
 
+        self.battery_density=battery_mass/self.battery_volume
+
         chord_body_section = np.linspace(self.c[0], self.c[1], 100)
         chord_y_body = np.linspace(0, self.b[1]/2, 100)
 
@@ -341,10 +434,22 @@ class Plane:
         zz_function_wing=structure_density_wing*chord_wing_section**2*(x_wing**2+chord_y_wing**2)
         zz_function_body=structure_density_body*chord_body_section**2*(x_body**2+chord_y_body**2)
 
+        I_xx_batt=self.battery_density*self.cg_list[1][1]*self.y_list[1]**2
+        I_yy_batt=0
+        I_zz_batt=0
+        for i in range(len(self.cg_list[1])):
+            I_yy_batt+=self.battery_density*self.cg_list[1][i]*(self.cg_list[0][i]-self.x_cg)**2
+            if len(self.cg_list[1])==2:
+                y_cg=[0,self.y_list[1]]
+                I_zz_batt+=self.battery_density*self.cg_list[1][i]*((self.cg_list[0][i]-self.x_cg)**2+(y_cg[i])**2)
+            else:
+                y_cg=[0,self.y_list[1],0]
+                I_zz_batt+=self.battery_density*self.cg_list[1][i]*((self.cg_list[0][i]-self.x_cg)**2+(y_cg[i])**2)
 
-        self.I_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(xx_function_body, chord_y_body)+Landing_gear_mass*z_cg_lg**2+Vertical_tail_mass*z_cg_vtail**2+Pylon_mass*z_cg_pylon**2
-        self.I_yy=np.trapz(yy_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)+Landing_gear_mass*((self.lg_cg-self.x_cg)**2+z_cg_lg**2)+Vertical_tail_mass*((self.vertical_tail_cg-self.x_cg)**2+self.z_cg_pylon**2)+Pylon_mass*((self.pylon_cg-self.x_cg)**2+self.z_cg_pylon**2)
-        self.I_zz=np.trapz(zz_function_wing, chord_y_wing)+np.trapz(zz_function_body, chord_y_body)+Landing_gear_mass*(self.lg_cg-self.x_cg)**2+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)**2+Pylon_mass*(self.pylon_cg-self.x_cg)**2
+
+        self.I_xx=np.trapz(xx_function_wing, chord_y_wing)+np.trapz(xx_function_body, chord_y_body)+Landing_gear_mass*z_cg_lg**2+Vertical_tail_mass*z_cg_vtail**2+Pylon_mass*z_cg_pylon**2+I_xx_batt
+        self.I_yy=np.trapz(yy_function_wing, chord_y_wing)+np.trapz(yy_function_body, chord_y_body)+Landing_gear_mass*((self.lg_cg-self.x_cg)**2+z_cg_lg**2)+Vertical_tail_mass*((self.vertical_tail_cg-self.x_cg)**2+self.z_cg_pylon**2)+Pylon_mass*((self.pylon_cg-self.x_cg)**2+self.z_cg_pylon**2)+I_yy_batt
+        self.I_zz=np.trapz(zz_function_wing, chord_y_wing)+np.trapz(zz_function_body, chord_y_body)+Landing_gear_mass*(self.lg_cg-self.x_cg)**2+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)**2+Pylon_mass*(self.pylon_cg-self.x_cg)**2+I_zz_batt
         self.I_xz=Landing_gear_mass*(self.lg_cg-self.x_cg)*z_cg_lg+Vertical_tail_mass*(self.vertical_tail_cg-self.x_cg)*z_cg_vtail+Pylon_mass*(self.pylon_cg-self.x_cg)*z_cg_pylon
 
 
@@ -357,9 +462,9 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self,plane,eta,SrS,T_engine, d_engine,x_cg = 2,taper_v=0.4,A_v=2,
-                 thickness_v=0.12,def_rudder_emergency = 20, beta_max=30, Cl_alpha=2*np.pi,
-                 sweep_half_v=0, V_stall = 50, density = 1.225):
+    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
+                 thickness_v=0.12, def_rudder_emergency = 15, beta_max=30, Cl_alpha=2*np.pi,
+                 sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v
         self.Taper_v=taper_v
         self.V_s = V_stall
@@ -378,7 +483,7 @@ class Tail:
         self.sweep_half_v = sweep_half_v
 
         self.beta_max_rad = np.deg2rad(beta_max)#Make sure to add safety factor
-        self.beta_engine_fail = self.beta_max_rad*0.8
+        self.beta_engine_fail = self.beta_max_rad*0.4
 
         self.plane = plane #plane pobject
         self.x_cg = x_cg
@@ -386,12 +491,16 @@ class Tail:
         self.b_i=plane.b[1]
 
         self.T_engine = T_engine #Max thrust of one engine
-        self.d_engine = d_engine #distance of engine from centerline
+        self.dy_engine = self.plane.b[1]/2 #distance of engine from centerline is on the rib section
+        self.l_engine = l_engine #length of ducted fan
+        self.d_engine = d_engine #diameter of ducted fan
+
+        self.iteration = iteration
 
     def gradient(self, f, x, step):
         return (f(x + step) - f(x - step)) / (step * 2)
 
-    def newtonRaphson(self, f, x0, e, N, h, relax):
+    def newtonRaphson_tail(self, f, x0, e, N, h, relax):
         #print('\n\n*** NEWTON RAPHSON METHOD IMPLEMENTATION ***')
         i = 0
         step = 1
@@ -419,11 +528,14 @@ class Tail:
                 print('\nNot Convergent.')
                 flag = 2
                 condition = False
+            if x1 <= 0:
+                condition = False
+                x1=1000
             i += 1
             #print('x1---', x1)
 
         if flag == 1:
-            #print('\nRequired root is: %0.8f', x1)
+            # print('\nRequired root is: %0.8f', x1)
             return x0, i, x1
         else:
             #print('\nNot Convergent.')
@@ -431,45 +543,46 @@ class Tail:
 
     def calc_flap_span_factor(self):
         print("Considering that the flap span is {} ?".format(self.eta))
-        self.Kb= float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
+        self.Kb= 1 #float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
 
     def calc_delta_cl(self):
         # Calculates the flap chord/ average chord form Sr/S
         self.cfc = self.SrS / self.eta  # Assumes average chord and sweep of zero
 
         print("Considering that the cf/c is {} and flap deflection {} deg".format(self.cfc, self.df_deg))
-        self.k_theory = float(input('What is k (Roskam 6 - p.228 - fig. 8.13)'))
+        self.k_theory =1 # float(input('What is k (Roskam 6 - p.228 - fig. 8.13)'))
 
         print("Considering that the cf/c is {} and t/c is {}".format(self.cfc, self.thickness_v))
-        self.cl_delta_theory = float(input('What is cl_delta_theory (Roskam 6 - p.228 - fig. 8.14)'))
+        self.cl_delta_theory = 5 # float(input('What is cl_delta_theory (Roskam 6 - p.228 - fig. 8.14)'))
 
         # We assume Cl_alpha_theory = Cl_alpha
 
         self.delta_cl = self.df_rad * self.cl_delta_theory * self.k_theory
 
-    def calc_CL_alpha_w(self):
+    def calc_CL_alpha_v(self):
         #Assumed ellipitical lift distribution
-        self.CL_alpha_w = 2*np.pi/(1+2*np.pi/np.pi/self.A_v)
+        self.CL_alpha_v = 2*np.pi/(1+2*np.pi/np.pi/self.A_v)
 
     def calc_rudder_effectiveness(self):
         print("Considering that the cf/c is {} and A_v is {}".format(self.cfc, self.A_v))
         print("A_v is only 2 if you choose for a body configuraton, if not, change A_v in class input to the A_v of the wingtip VS and check your findings")
-        self.rudder_effectiveness = float(input('What is the flap effectiveness? (Roskam 6 - p.261 - fig. 8.53)'))
+        self.rudder_effectiveness = 1 # float(input('What is the flap effectiveness? ( Roskam 6 - p.261 - fig. 8.53)'))
 
     def calc_deltacl_rudder(self):
-        self.calc_CL_alpha_w()
+        self.calc_CL_alpha_v()
         self.calc_flap_span_factor()
         self.calc_delta_cl()
         self.calc_rudder_effectiveness()
 
-        self.delta_cL_rudder = self.Kb*self.delta_cl*self.CL_alpha_w/self.cl_alpha_theory*self.rudder_effectiveness
+        self.delta_cL_rudder = self.Kb*self.delta_cl*self.CL_alpha_v/self.cl_alpha_theory*self.rudder_effectiveness
 
+### --- Vertical stabiliser either on the wingtips or 2 on the body --- (iteration: 0)
 
     def calc_xv(self,S_v): #Body
         cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
         self.min_dy = np.tan(self.beta_max_rad)*cr
 
-        MAC = 2/3 * (cr+self.taper_v*cr+self.taper_v**2*cr)/(1+self.taper_v)
+        MAC = 2/3 * cr*(1+self.taper_v+self.taper_v**2)/(1+self.taper_v)
         b = (self.A_v/S_v)**0.5
 
         self.zv = -(b)*(MAC-cr)/(cr-self.taper_v*cr)
@@ -480,54 +593,139 @@ class Tail:
     def calc_lv(self,S_v):#Body
         self.calc_xv(S_v)
         self.x_v_end_body = (self.coords_bot[1] - self.coords_bot[0]) / (self.b_i) * self.min_dy + self.coords_bot[0]
+        # print(S_v)
         cr = (S_v/2/self.A_v)**0.5*2/(self.taper_v+1)
-        self.lv = self.x_v_end_body-self.x_cg-cr+self.x_v
+        self.lv =self.x_v_end_body-self.x_cg-cr+self.x_v
 
-    def f(self,S_v):
+    def f_b(self,S_v): #Body
         self.calc_lv(S_v)  # keep in the loop
-        f = 2* 0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.lv - self.T_engine * self.d_engine
+        f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder
+                                                        ) * self.density * self.V_s ** 2 * S_v * self.lv
         return f
 
-    def tail_sizing(self):
+    def tail_sizing_1(self):
         self.calc_deltacl_rudder()
 
         #Body
-        self.S_v_b = self.newtonRaphson(self.f,30,0.01,10000,0.00010,1)[2]
+        self.S_v_b = self.newtonRaphson_tail(self.f_b,9,0.01,10000,0.0001,0.5)[2]
+        if self.S_v_b=="No solution found":
+            self.S_v_b = 10000
 
         #Wingtips
         cr_t = self.plane.c[-1]
         self.MAC_wt = 2/3 * (cr_t+self.taper_v*cr_t+self.taper_v**2*cr_t)/(1+self.taper_v)
-
         self.l_wt = -0.75 * cr_t + self.coords_bot[-1] - self.x_cg #Assume ac is at quarter root chord
-        self.S_v_wt = self.T_engine * self.d_engine/2/(0.5 * (self.CL_alpha_w + self.delta_cL_rudder) * self.density * self.V_s ** 2 * self.l_wt)
+        self.S_v_wt = self.T_engine * self.dy_engine/(2*0.5 * (self.CL_alpha_v *self.beta_engine_fail + self.delta_cL_rudder
+                                                    ) * self.density * self.V_s ** 2 * self.l_wt)
+
 
 
         #Compare best option
-        if self.S_v_b>self.S_v_wt:
-            self.S_v = 2*np.copy(self.S_v_b)
+        if self.S_v_b<self.S_v_wt:
+            self.S_v = 2*np.copy(self.S_v_b) #Surface for both tailplanes
             self.x_tail = self.lv+self.x_cg
             self.z_tail = self.zv
             self.A_v = self.A_v
             print("Vertical stabiliser on Body section with dy = {} ".format(self.min_dy))
             self.x_v_cg = self.x_tail
+
         else:
-            self.S_v = 2*np.copy(self.S_v_wt)
-            b = (self.S_v_wt/2/self.MAC_wt)
+            self.S_v = 2*np.copy(self.S_v_wt) #Surface for both wingtips
+            self.b = (self.S_v_wt/self.MAC_wt)
             self.x_tail = self.l_wt + self.x_cg
-            self.z_tail = -(b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
-            self.A_v = b**2/self.S_v
-            print("Vertical stabiliser on Wingtips".format(self.min_dy))
+            self.z_tail = -(self.b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
+            self.A_v = self.b**2/self.S_v
+            print("Vertical stabiliser on Wingtips, A is {}".format(self.A_v))
+
+###  --- Vertical stabiliser on wingtips + one vertical stabiliser on the body --- (iteration: 1)
+
+    def calc_xv_b_wt(self,S_v): #Body+wing tips
+        cr = (S_v/self.A_v_b1)**0.5*2/(self.taper_v+1)
+        self.cr_test = cr
+        #print('cr',cr)
+
+        MAC = 2/3 * cr*(1+self.taper_v+self.taper_v**2)/(1+self.taper_v)
+        self.MAC_test = MAC
+        self.b_v_b = (self.A_v_b1/S_v)**0.5
+
+        self.z_v_b = -(self.b_v_b)*(MAC-cr)/(cr-self.taper_v*cr)
+
+
+        self.sweep_v = np.arctan((0.25*cr-0.25*MAC)/(self.z_v_b))
+
+        self.x_v_b_wt = np.tan(self.sweep_v)*self.z_v_b+0.25*cr
+
+    def calc_lv_b_wt(self,S_v):
+        self.calc_xv_b_wt(S_v)
+        x_v_end_body = self.coords_bot[0]
+        #print('coords', self.coords_bot)
+        #print('S_v',S_v)
+        self.cr_v_b = (S_v / self.A_v_b1) ** 0.5 * 2 / (self.taper_v + 1)
+        self.l_v_b_wt = x_v_end_body - self.x_cg - self.cr_v_b + self.x_v_b_wt
+        #print('length',x_v_end_body)
+        #print('cg',self.x_cg)
+        #print('cr', cr)
+        #print('x_v_b_wt',self.x_v_b_wt)
+
+    def funct_f_b_wt(self,S_v):
+        self.calc_lv_b_wt(S_v)  # keep in the loop
+        f = - self.T_engine * self.dy_engine + 2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1+  0.5 * (self.CL_alpha_v * self.beta_engine_fail) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt
+        #print('Engine',- self.T_engine * self.dy_engine)
+        #print('Wt',2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1 * self.S_v_wt1)
+        #print('Body',  0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2 * S_v * self.l_v_b_wt)
+        #print('M_wt',2* 0.5 * (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder) * self.density * self.V_s ** 2* self.l_v_wt1)
+        #print('M_b',  (self.CL_alpha_v * self.beta_engine_fail + self.delta_cL_rudder)*0.5* self.density * self.V_s ** 2 * S_v * self.l_v_b_wt, self.l_v_b_wt)
+        return f
 
 
 
+    #def check_engine_wake(self):
+    def tail_sizing_2(self): #Wingtips + one body configuration
+        self.calc_deltacl_rudder()
+        # Wingtips
+        self.A_v_wt1 = self.A_v
+        cr_t = self.plane.c[-1]
+        self.MAC_wt1 = 2 / 3 * (cr_t + self.taper_v * cr_t + self.taper_v ** 2 * cr_t) / (1 + self.taper_v)
+        self.S_v_wt1 = self.A_v_wt1 * ((cr_t+self.taper_v*cr_t)/2)**2  # Surface for one of the wingtips
+        self.S_v_wt2 = 2 * self.S_v_wt1
+        self.b_v_wt1 = (self.S_v_wt1*self.A_v_wt1)**0.5
+        self.x_tail_wt1 = -0.75 * cr_t + self.coords_bot[-1]
+        self.l_v_wt1 = self.x_tail_wt1 - self.x_cg
+        self.z_tail_wt1 = -(self.b_v_wt1)*(self.MAC_wt1-cr_t)/(cr_t-self.taper_v*cr_t)
 
 
 
+        #Body
+        self.A_v_b1 = self.A_v
+        self.S_v_b1 = self.newtonRaphson_tail(self.funct_f_b_wt, 9, 0.005, 100, 0.00001, 0.75)[2]  # surface of body
+        self.b_v_b1 = np.copy(self.b_v_b)
+        self.l_v_b1 = np.copy(self.l_v_b_wt)
+        self.x_tail_b1 = self.l_v_b1 + self.x_cg
+        self.z_tail_b1 = np.copy(self.z_v_b)
 
+        #Check offset of engines
+        self.x_offset_engine = -(self.dy_engine / 2 / np.tan(self.beta_max_rad) - self.coords_bot[0] + self.coords_bot[
+            1] - self.l_engine/2)
+        if self.x_offset_engine <= 0:
+            self.x_offset_engine = 0
+        # print(self.S_v_wt1,self.S_v_b1)
+        self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips and body VS
+        self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
 
+    def tail_dimensions(self, S_v):#Tail dimensions in function of tail input
+        self.tail_sizing_2()
+        self.calc_xv_b_wt(S_v)
+        self.calc_lv_b_wt(S_v)
+        # Assign variables
+        self.S_v_b1 = S_v
+        self.A_v_b1 = self.A_v
+        self.b_v_b1 = np.copy(self.b_v_b)
+        self.l_v_b1 = np.copy(self.l_v_b_wt)
+        self.x_tail_b1 = self.l_v_b1 + self.x_cg
+        self.z_tail_b1 = np.copy(self.z_v_b)
 
-
-
+        self.S_v_tot = 2 * self.S_v_wt1 + S_v  # Surface for both wingtips and body VS
+        self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + S_v * self.x_tail_b1) / (self.S_v_tot)
 
     def Tail_positioning(self):
         if self.coords_bot[-1]>self.coords_bot[0] and self.plane.b[1]<self.min_dy:
@@ -552,7 +750,7 @@ class Trim:
         self.CD=CD
         self.T_c=T_c
         self.V=V
-        self.aoa=aoa
+        self.aoa=np.deg2rad(aoa)
         self.theta=theta
         self.q=q
         self.beta=beta

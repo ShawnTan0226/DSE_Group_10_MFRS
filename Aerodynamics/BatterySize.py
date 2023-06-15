@@ -270,10 +270,6 @@ class Planform_calculation:
                     except ValueError:
                         continue
         # Print the positive and negative arrays
-        print("Positive Column 1:", positive_column1)
-        print("Positive Column 2:", positive_column2)
-        print("Negative Column 1:", negative_column1)
-        print("Negative Column 2:", negative_column2)
 
 
         # Compute the surface using numpy
@@ -292,8 +288,6 @@ class Planform_calculation:
         # plt.draw()
         # plt.show()
 
-        print(negative_surface)
-        print(postive_surface)
         Area = (negative_surface+postive_surface)
         return Area
 
@@ -358,7 +352,7 @@ class Planform_calculation:
     def makeplane(self):
         self.solve_equation()
         if self.flying_wing==False:
-            self.plane=Plane(self.Cri,[self.taper_inner,self.taper_outer],[np.rad2deg(self.sweep_inner),np.rad2deg(self.sweep_outer)],[self.b_inner,self.b_outer+self.b_inner])
+            self.plane=Plane(self.Cri,[self.taper_inner,self.taper_outer],[np.rad2deg(self.sweep_inner),np.rad2deg(self.sweep_outer)],[self.b_inner,self.b_outer+self.b_inner],self.V_bat)
         elif self.flying_wing==True:
             self.plane=Plane(self.Cri,[self.taper_outer],[np.rad2deg(self.sweep_outer)],[self.b_inner+self.b_outer])
         return self.plane
@@ -366,7 +360,82 @@ class Planform_calculation:
     def battery_placement(self):
         V_wing=2*self.Area_outer * (self.taper_outer**2*self.b_outer/2+0.5*(1-self.taper_outer)*self.taper_outer*self.b_outer+1/6*(1-self.taper_outer)**2*self.b_outer)*self.taper_inner**2*self.Cri**2
         V_pl_extra=self.V_bat_prop-V_wing
-        a=(self.plane.c[-1]-self.plan.c[1])*2/self.plane.b[-1]
+        a=(self.plane.c[-1]-self.plane.c[1])*2/self.plane.b[-1]
         if V_pl_extra<=0:
-            np.roots([a**2,2*a,self.c[-1]**2])
+            y=np.roots([a**2,2*a,self.plane.c[-1]**2-self.V_bat_prop/self.Area_inner])
+            y_wing=np.linspace(y,self.plane.b[-1],100)
+            y_wing_x=y_wing-y
+            chord_wing=a*y_wing+self.plane.c[-1]
+            x_wing = (0.25 * self.plane.c[0] + np.tan(self.plane.sweep[1]) * self.plane.b[1]/2) + np.tan(self.plane.sweep[1]) * y_wing_x + 0.1 * chord_wing
+            self.x_cg_prop_batt=np.trapz(x_wing*chord_wing**2,y_wing)
+
+
+            V_batt_body=self.V_bat_pl
+
+            y_tot=np.linspace(0,self.plane.b[1]/2,100)
+            chord=np.linspace(self.plane.c[0],self.plane.c[1],100)
+            thickness=self.Area_inner*chord/0.4
+            offset=np.linspace(0,self.plane.offset[1],100)
+            asd=self.plane.offset[1]+0.15*self.plane.c[1]-chord*0.15-offset
+            V_body_triangle=2*np.trapz(thickness*(self.plane.offset[1]+0.15*self.plane.c[1]-chord*0.15-offset),y_tot)
+            if V_body_triangle>V_batt_body:
+                self.option=1
+                x_cg_prop_batt_body=0.5*self.plane.offset[1]
+                self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+self.x_cg_prop_batt*self.V_bat_prop)/(self.V_bat)
+                self.cg_list=[[self.x_cg_batt[0],x_cg_prop_batt_body],[self.V_bat_prop,V_batt_body]]
+                return self.x_cg_batt[0]
+            else:
+                self.option=2
+                V_body_rectangle=V_batt_body-V_body_triangle
+                A_x=2*np.trapz(thickness,y_tot)
+                x_batt_body=V_body_rectangle/A_x
+                x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
+                self.x_cg_batt=(x_cg_rect*V_body_rectangle+self.x_cg_prop_batt*self.V_bat_prop+0.5*self.plane.offset[1]*V_body_triangle)/(self.V_bat)
+                self.cg_list=[[self.x_cg_batt[0],x_cg_rect,0.5*self.plane.offset[1]],[self.V_bat_prop,V_body_rectangle,V_body_triangle]]
+                return self.x_cg_batt[0]
+        else:
+            chord_wing_sections = np.linspace(self.plane.c[1], self.plane.c[2], 100)
+            chord_y_wing = np.linspace(0, self.plane.b[2]/2 - self.plane.b[1]/2, 100)
+
+            x_wing = (0.25 * self.plane.c[0] + np.tan(self.plane.sweep[1]) * self.plane.b[1]/2) + np.tan(self.plane.sweep[1]) * chord_y_wing + 0.1 * chord_wing_sections
+
+            self.x_rect_batt=0
+            wing_integrand = x_wing * chord_wing_sections**2
+            x_cg_prop_batt_wing = np.trapz(wing_integrand, chord_y_wing)/np.trapz(chord_wing_sections**2, chord_y_wing)
+
+            V_batt_body=V_pl_extra+self.V_bat_pl
+
+            y_tot=np.linspace(0,self.plane.b[1]/2,100)
+            chord=np.linspace(self.plane.c[0],self.plane.c[1],100)
+            thickness=self.Area_inner*chord/0.4
+            offset=np.linspace(0,self.plane.offset[1],100)
+            V_body_triangle=2*np.trapz(thickness*(self.plane.offset[1]+0.15*self.plane.c[1]-chord*0.15-offset),y_tot)
+            if V_body_triangle>V_batt_body:
+                self.option=3
+                x_cg_prop_batt_body=0.66666*self.plane.offset[1]
+                self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+x_cg_prop_batt_wing*V_wing)/(self.V_bat)
+                self.cg_list=[[x_cg_prop_batt_body,x_cg_prop_batt_wing],[V_batt_body,V_wing]]
+                return self.x_cg_batt
+            else:
+                self.option=4
+                V_body_rectangle=V_batt_body-V_body_triangle
+                A_x=2*np.trapz(thickness,y_tot)
+                x_batt_body=V_body_rectangle/A_x
+                self.x_rect_batt=x_batt_body
+                x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
+                # plt.scatter(0,0.66666*self.plane.offset[1])
+                # plt.scatter(0,x_cg_rect)
+                x_cg_triangle=0.66666*self.plane.offset[1]
+                self.x_cg_batt=(x_cg_rect*V_body_rectangle*0.9+x_cg_prop_batt_wing*V_wing+x_cg_triangle*V_body_triangle)/(self.V_bat)
+                self.cg_list=[[x_cg_rect,x_cg_prop_batt_wing,x_cg_triangle],[V_body_rectangle*0.9,V_wing,V_body_triangle]]
+                return self.x_cg_batt
+            
+
+
+
+
+
+            
+
+        
         

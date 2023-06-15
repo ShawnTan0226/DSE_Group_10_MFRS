@@ -270,10 +270,6 @@ class Planform_calculation:
                     except ValueError:
                         continue
         # Print the positive and negative arrays
-        print("Positive Column 1:", positive_column1)
-        print("Positive Column 2:", positive_column2)
-        print("Negative Column 1:", negative_column1)
-        print("Negative Column 2:", negative_column2)
 
 
         # Compute the surface using numpy
@@ -292,8 +288,6 @@ class Planform_calculation:
         # plt.draw()
         # plt.show()
 
-        print(negative_surface)
-        print(postive_surface)
         Area = (negative_surface+postive_surface)
         return Area
 
@@ -367,7 +361,6 @@ class Planform_calculation:
         V_wing=2*self.Area_outer * (self.taper_outer**2*self.b_outer/2+0.5*(1-self.taper_outer)*self.taper_outer*self.b_outer+1/6*(1-self.taper_outer)**2*self.b_outer)*self.taper_inner**2*self.Cri**2
         V_pl_extra=self.V_bat_prop-V_wing
         a=(self.plane.c[-1]-self.plane.c[1])*2/self.plane.b[-1]
-        print(V_pl_extra)
         if V_pl_extra<=0:
             y=np.roots([a**2,2*a,self.plane.c[-1]**2-self.V_bat_prop/self.Area_inner])
             y_wing=np.linspace(y,self.plane.b[-1],100)
@@ -390,7 +383,6 @@ class Planform_calculation:
                 x_cg_prop_batt_body=0.5*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+self.x_cg_prop_batt*self.V_bat_prop)/(self.V_bat)
                 self.cg_list=[[self.x_cg_batt[0],x_cg_prop_batt_body],[self.V_bat_prop,V_batt_body]]
-                print('Option------',self.option)
                 return self.x_cg_batt[0]
             else:
                 self.option=2
@@ -400,8 +392,6 @@ class Planform_calculation:
                 x_cg_rect=x_batt_body/2+(self.plane.offset[1]+0.15*self.plane.c[1])
                 self.x_cg_batt=(x_cg_rect*V_body_rectangle+self.x_cg_prop_batt*self.V_bat_prop+0.5*self.plane.offset[1]*V_body_triangle)/(self.V_bat)
                 self.cg_list=[[self.x_cg_batt[0],x_cg_rect,0.5*self.plane.offset[1]],[self.V_bat_prop,V_body_rectangle,V_body_triangle]]
-                print('Option------',self.option)
-                print('Bruhbasiugfahewefgiefsigu')
                 return self.x_cg_batt[0]
         else:
             chord_wing_sections = np.linspace(self.plane.c[1], self.plane.c[2], 100)
@@ -409,6 +399,7 @@ class Planform_calculation:
 
             x_wing = (0.25 * self.plane.c[0] + np.tan(self.plane.sweep[1]) * self.plane.b[1]/2) + np.tan(self.plane.sweep[1]) * chord_y_wing + 0.1 * chord_wing_sections
 
+            self.x_rect_batt=0
             wing_integrand = x_wing * chord_wing_sections**2
             x_cg_prop_batt_wing = np.trapz(wing_integrand, chord_y_wing)/np.trapz(chord_wing_sections**2, chord_y_wing)
 
@@ -424,7 +415,6 @@ class Planform_calculation:
                 x_cg_prop_batt_body=0.66666*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_prop_batt_body*V_batt_body+x_cg_prop_batt_wing*V_wing)/(self.V_bat)
                 self.cg_list=[[x_cg_prop_batt_body,x_cg_prop_batt_wing],[V_batt_body,V_wing]]
-                print('Option------',self.option)
                 return self.x_cg_batt
             else:
                 self.option=4
@@ -438,8 +428,6 @@ class Planform_calculation:
                 x_cg_triangle=0.66666*self.plane.offset[1]
                 self.x_cg_batt=(x_cg_rect*V_body_rectangle*0.9+x_cg_prop_batt_wing*V_wing+x_cg_triangle*V_body_triangle)/(self.V_bat)
                 self.cg_list=[[x_cg_rect,x_cg_prop_batt_wing,x_cg_triangle],[V_body_rectangle*0.9,V_wing,V_body_triangle]]
-                
-                print('Option------',self.option)
                 return self.x_cg_batt
             
 

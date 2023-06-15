@@ -18,7 +18,7 @@ class LandingGear:
         # Assumed initial MLG position
         self.pos_x_MLG = self.xcg + 0.15 * self.MAC
         # NLG distance flowing from this
-        load_percentage_NLG = 0.1   # Set percentage of MTOW NLG supports
+        load_percentage_NLG = 0.15   # Set percentage of MTOW NLG supports
         self.pos_x_NLG = (self.xcg - self.pos_x_MLG*(1-load_percentage_NLG))/load_percentage_NLG
 
         # Find wingtip distance

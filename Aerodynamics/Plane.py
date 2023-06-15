@@ -76,6 +76,16 @@ class Plane:
     def plot_plane(self,show=True):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
+        
+        Engine=np.array([self.coords_bot[1]-0.3,self.coords_bot[1]+1])
+        Engine=np.concatenate((Engine,Engine[::-1],[self.coords_bot[1]-0.3]))
+        y_engine=np.array([self.b[1]/2+1.3,self.b[1]/2+1.3,self.b[1]/2-1.3,self.b[1]/2-1.3,self.b[1]/2+1.3])
+        plt.fill(y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.fill(-y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.plot(y_engine,Engine,color='black',zorder=7)
+        plt.plot(-y_engine,Engine,color='black',zorder=7)
+        plt.fill(y_engine,Engine, color='grey',alpha=0.8,zorder=6)
+        plt.fill(-y_engine,Engine, color='grey',alpha=0.8, label='Engine',zorder=6)
         # plt.plot(np.concatenate((self.y_list,self.y_list[::-1],[self.y_list[0]])),np.concatenate((self.x_list-0.25*self.MAC_list,self.x_list[::-1]+0.75*self.MAC_list[::-1],[self.x_list[0]-0.25*self.MAC_list[0]])),color='red')
         # plt.plot([self.y_quarter,self.y_quarter],[self.x_quarter-0.25*self.MAC,self.x_quarter+0.75*self.MAC])
         # plt.scatter(self.y_list,self.x_list)
@@ -150,6 +160,10 @@ class Plane:
         Rectangle=np.concatenate((Rectangle,Rectangle[::-1]))
         y_rect=np.array([self.b[1]/2,self.b[1]/2,-self.b[1]/2,-self.b[1]/2])
 
+        Engine=np.array([self.coords_bot[1]-0.3,self.coords_bot[1]+1])
+        Engine=np.concatenate((Engine,Engine[::-1],[self.coords_bot[1]-0.3]))
+        y_engine=np.array([self.b[1]/2+1.3,self.b[1]/2+1.3,self.b[1]/2-1.3,self.b[1]/2-1.3,self.b[1]/2+1.3])
+
         Computer=np.array([(self.offset+0.15*self.c)[1]+self.x_rect_batt,(self.offset+0.65*self.c)[1],(self.offset+0.65*self.c)[0]])
         Computer=np.concatenate((Computer,Computer[::-1]))
         y_comp=np.array([self.b[1]/2,self.b[1]/2,0,0,-self.b[1]/2,-self.b[1]/2])
@@ -165,6 +179,12 @@ class Plane:
 
         plt.plot(self.bfull,self.coords, color='black')
         plt.gca().invert_yaxis()
+        plt.fill(y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.fill(-y_engine,Engine, color='white',alpha=1,zorder=5)
+        plt.plot(y_engine,Engine,color='black',zorder=7)
+        plt.plot(-y_engine,Engine,color='black',zorder=7)
+        plt.fill(y_engine,Engine, color='red',alpha=0.6,zorder=6)
+        plt.fill(-y_engine,Engine, color='red',alpha=0.6, label='Engine',zorder=6)
         plt.fill(y,x_store, color='blue', alpha=opacity)
         plt.fill(y_neg,x_store, color='blue', alpha=opacity, label='Propulsion Battery')
         plt.fill(y_triangle,Triangle, color='purple', alpha=opacity, label='propulsion + Battery',linewidth=0)
@@ -442,7 +462,7 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2,
+    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
                  thickness_v=0.12, def_rudder_emergency = 15, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v
@@ -515,7 +535,7 @@ class Tail:
             #print('x1---', x1)
 
         if flag == 1:
-            print('\nRequired root is: %0.8f', x1)
+            # print('\nRequired root is: %0.8f', x1)
             return x0, i, x1
         else:
             #print('\nNot Convergent.')
@@ -688,7 +708,7 @@ class Tail:
             1] - self.l_engine/2)
         if self.x_offset_engine <= 0:
             self.x_offset_engine = 0
-        print(self.S_v_wt1,self.S_v_b1)
+        # print(self.S_v_wt1,self.S_v_b1)
         self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips and body VS
         self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
 

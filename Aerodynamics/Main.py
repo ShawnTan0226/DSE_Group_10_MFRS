@@ -37,6 +37,10 @@ d_engine = 3 #[m] distance of 1 engine from centerline
 l_engine = 2
 
 
+plot_plane_confiig=True
+plot_payload_config=True
+record=False
+
 Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,0.4)
 plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
@@ -66,6 +70,12 @@ for i in range(10):
     x_cg_payload=0.281*plane.b_tot/2
     x_cg_eng=0.85*plane.b_tot/2
     x_cg_system=0.281*plane.b_tot/2
+    
+    
+    # x_cg_pylon=plane.coords_bot[1]
+    # x_cg_payload=0.281*plane.b_tot/2
+    # x_cg_eng=plane.coords_bot[1]+0.65
+    # x_cg_system=0.281*plane.b_tot/2
 
     LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
@@ -73,30 +83,16 @@ for i in range(10):
 
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail_wt1,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
-y = tail.funct_f_b_wt(x)
-# tail.tail_dimensions(8)
+# y = tail.funct_f_b_wt(x)
+# plt.plot(x, y)
+# plt.show()
+tail.tail_dimensions(7)
 
 
-print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
+# print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
-plot_plane_confiig=True
-plot_payload_config=False
-record=True
-if plot_plane_confiig:
-    if plot_payload_config:
-        plane.draw_battery_placement(0.5,False)
-    else:
-        plane.plot_plane(False)
-    plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,-LG.pos_x_NLG],color="blue",label="LG")
-    plt.scatter([0],[x_cg],color="red",label="CG")
-    plt.scatter([plane.y_quarter],[plane.x_quarter],color="green",label="ac")
-    plt.plot([plane.coords_bot[0]-tail.cr_v_b,plane.coords_bot[0]],[0,0],color="black",label="tail")
-    plt.legend()
-    print('LG height',LG.height_MLG)
-    print('x_cg',x_cg)
-    plt.show()
-    plane.xflrvelues()
+
 
 
 
@@ -116,6 +112,22 @@ print('dcm----',Cs.dCm_req)
 print(Cs.calc_delta_Cm_outer())
 print(Cs.eta_i)
 print('new_CL_max',Cs.CL_max_new)
+
+if plot_plane_confiig:
+    if plot_payload_config:
+        plane.draw_battery_placement(0.5,False)
+    else:
+        plane.plot_plane(False)
+    plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,LG.pos_x_NLG],color="blue",label="LG",zorder=8)
+    plt.scatter([0],[x_cg],color="red",label="CG",zorder=8)
+    plt.scatter([plane.y_quarter],[plane.x_quarter],color="green",label="ac",zorder=8)
+    print(tail.cr_v_b,plane.coords_bot[0])
+    plt.plot([0,0],[plane.coords_bot[0]-tail.cr_v_b,plane.coords_bot[0]],color="brown",label="tail")
+    plt.legend()
+    print('LG height',LG.height_MLG)
+    print('x_cg',x_cg)
+    plt.show()
+    plane.xflrvelues()
 
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()

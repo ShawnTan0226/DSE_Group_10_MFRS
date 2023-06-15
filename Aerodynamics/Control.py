@@ -52,7 +52,7 @@ class control:
 
     def calc_delta_Cm_outer(self):
         dcm=self.calc_delta_CL(self.delta,self.plane.b[1]/self.plane.b_tot+0.05,0.95)
-        print('eta_min',self.plane.b[1]/self.plane.b_tot)
+        # print('eta_min',self.plane.b[1]/self.plane.b_tot)
         return dcm
 
     def calc_x_cg_MAC(self):
@@ -85,7 +85,7 @@ class control:
         cfc_list=[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]
         f_adcl=sp.interp1d(cfc_list,ad_cl_list)
         ad_cl=f_adcl(cfc)
-        print('Aspect ratio: ',self.plane.A,'ad_cl: ',ad_cl)
+        # print('Aspect ratio: ',self.plane.A,'ad_cl: ',ad_cl)
         self.ad_CL_ad_cl=1.1#float(input('Enter ad_CL/ad_cl(Roskam 6, pg 261, fig 8.53): '))
         return self.ad_CL_ad_cl
 
@@ -139,7 +139,7 @@ class control:
                 flag = 2
                 condition = False
             i += 1
-            print('x1---', x1)
+            # print('x1---', x1)
 
         if flag == 1:
             #print('\nRequired root is: %0.8f', x1)

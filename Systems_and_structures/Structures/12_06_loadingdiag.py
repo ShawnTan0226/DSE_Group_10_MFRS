@@ -10,9 +10,9 @@ Sweep05 = np.deg2rad(35.36)
 # Weights in the aircraft
 BatteryMass = 1829 + 2596 # kg from 2nd weight estimation
 StructuralMass = 1695 # kg from 2nd weight estimation
-EngineMass = 400 # kg for 7 engines, evenly spread
+EngineMass = 0# 400 # kg for 7 engines, evenly spread
 EngineMass = EngineMass / 2
-ThrustTO = 6000 # N thrust of one engine at Lift Off
+ThrustTO = 0 # N thrust of one engine at Lift Off
 ThrustCruise = 3011 # N thrust of one engine at cruise
 # Take off force at hook
 acceleration = 0
@@ -25,34 +25,27 @@ ForceHookTO = 0 # acceleration * mass_total - ThrustTO * 2
 
 def importdat(n):
     CruiseDistribution = '4.75deg cruise lift dist.csv'
-    TODistribution = 'MainWing_a=18.00_v=63.60ms.csv'
     data_cruise = pd.read_csv(CruiseDistribution, index_col=None)
-    data_TO = pd.read_csv(TODistribution, index_col=None)
     data_cruise = data_cruise.to_dict(orient='list')
-    data_TO = data_TO.to_dict(orient='list')
     y_old =  data_cruise['y-span']
 
     # Interpolating to n data points with a new y axis
 
     y_points = np.linspace(data_cruise['y-span'][0], data_cruise['y-span'][-1], n)
+    y_points = np.linspace(data_cruise['y-span'][0], data_cruise['y-span'][-1], n)
     for i in data_cruise.keys():
         data_cruise[i] = np.interp(y_points, y_old, data_cruise[i])
-    for i in data_TO.keys():
-        data_TO[i] = np.interp(y_points, y_old, data_TO[i])
 
-    # Test plots
-    #plt.plot(y_points,data_cruise['Chord'])
-    #plt.show()
 
-    return data_cruise, data_TO, y_points
+    return data_cruise, y_points
 
 ##### Define the force distributions along the beam (half span) #####
 
-def forces(CruiseDistribution, TODistribution, y_points, n):
+def forces(CruiseDistribution, y_points, n):
 
     # Lift and drag at cruise :
     Cl = CruiseDistribution['Cl']
-    Cdi = CruiseDistribution['ICd']
+    Cdi = CruiseDistribution['ICd'] + 0.012# total cd cdi + cd0
     c = CruiseDistribution['Chord']
     V = 110 # m/s
     rho = 0.7361 # kg/m^3
@@ -60,43 +53,19 @@ def forces(CruiseDistribution, TODistribution, y_points, n):
     Lcruise = Cl * 0.5 * rho * V**2 * c # N/m
     Dcruise = Cdi * 0.5 * rho * V**2 * c # N/m
 
-    # Lift and drag at Lift off :
-    Cl = TODistribution['Cl']
-    Cdi = TODistribution['ICd']
-    c = TODistribution['Chord']
-    V = 63.6  # m/s
-    rho = 1.225  # kg/m^3
-    dy = (TODistribution['y-span'][-1] - TODistribution['y-span'][0]) / n
-    Ltakeoff = Cl * 0.5 * rho * V**2 * c # N/m
-    Dtakeoff = Cdi * 0.5 * rho * V**2 * c  # N/m
-
-
+    print(np.average(c),n)
     # Weight distribution along span
     # distributed weights of batteries, payload and structure
-    Wave = (StructuralMass + BatteryMass)/2 * 9.81 / TODistribution['y-span'][-1] # N/m
-    W = Wave * TODistribution['Chord'] / ((TODistribution['Chord'][0] + TODistribution['Chord'][-1]) / 2) # N/m mass spread normalised with chord distribution.
-    W[0] += EngineMass * 9.81 / (CruiseDistribution['y-span'][-1] / n)
-    W[-1] += EngineMass*2 * 9.81 / (CruiseDistribution['y-span'][-1] / n)
-    W[int(round(n/3))] += EngineMass * 9.81 / (CruiseDistribution['y-span'][-1] / n)
-    W[int(round(n*2/3))] += EngineMass * 9.81 / (CruiseDistribution['y-span'][-1] / n)
+    Wave = (StructuralMass + BatteryMass)/2 * 9.81 / CruiseDistribution['y-span'][-1] # N/m
+    W = Wave * CruiseDistribution['Chord'] / ((CruiseDistribution['Chord'][0] + CruiseDistribution['Chord'][-1]) / 2) # N/m mass spread normalised with chord distribution.
+    #W[0] += EngineMass * 9.81 / (CruiseDistribution['y-span'][-1] / n)
+    #W[-1] += EngineMass*2 * 9.81 / (CruiseDistribution['y-span'][-1] / n)
+    #W[int(round(n/3))] += EngineMass * 9.81 / (CruiseDistribution['y-span'][-1] / n)
+    W[int(round(n*(1.47/CruiseDistribution['y-span'][-1])))] += EngineMass * 9.81 / (CruiseDistribution['y-span'][-1] / n)
 
-    # Lower weight:
-    #W = W * 0.3
-
-    # Drag force distribution :
-    # Thrust force :
-    T = np.zeros(n)
-    T[0] += ThrustTO + ForceHookTO
-    T[-1] += ThrustTO * 2
-    T[int(round(n/3))] += ThrustTO
-    T[int(round(n*2/3))] += ThrustTO
-    TTO = T / (CruiseDistribution['y-span'][-1] / n)
 
     T = np.zeros(n)
-    T[0] += ThrustCruise
-    T[-1] += ThrustCruise * 2
-    T[int(round(n / 3))] += ThrustCruise
-    T[int(round(n * 2 / 3))] += ThrustCruise
+    T[int(round(n*(1.47/CruiseDistribution['y-span'][-1])))] += ThrustCruise
     TC = T / (CruiseDistribution['y-span'][-1] / n)
 
     # Moment distribution :
@@ -104,17 +73,11 @@ def forces(CruiseDistribution, TODistribution, y_points, n):
     rho = 0.7361 # kg/m^3
     M_cruise = CruiseDistribution['CmAirf@chord/4'] * 1/2 * rho * V**2 * CruiseDistribution['Chord']
 
-    V = 63.6  # m/s
-    rho = 1.225  # kg/m^3
-    M_TO = TODistribution['CmAirf@chord/4'] * 1 / 2 * rho * V**2 * TODistribution['Chord']
+    return Lcruise, TC, W, M_cruise, Dcruise,
 
-    return Lcruise, Ltakeoff, TC, TTO, W, M_cruise, M_TO, Dcruise, Dtakeoff
-
-def TestForces(Lcruise, Ltakeoff, Tcruise, W, TODistribution):
-    dy = (TODistribution['y-span'][-1] - TODistribution['y-span'][0]) / n
-    c = TODistribution['Chord']
-    #print('Ltot = ',np.trapz(Lcruise/9.81, TODistribution['y-span']),' kg')
-    #print('Wtot = ',np.trapz(W/9.81,TODistribution['y-span']),' kg')
+def TestForces(Lcruise, Tcruise, W):
+    dy = (CruiseDistribution['y-span'][-1] - CruiseDistribution['y-span'][0]) / n
+    c = CruiseDistribution['Chord']
 
 def InternalLoads(L, T, W, D, M, n, y_points, halfspan,sweep):
     b = halfspan * 2
@@ -128,8 +91,7 @@ def InternalLoads(L, T, W, D, M, n, y_points, halfspan,sweep):
     Mx = -integrate.cumtrapz(np.flip(Vy * b / (2 * n)))[::-1]
     My = np.append(My,[0])
     Mx = np.append(Mx,[0])
-    #Mz = integrate.cumtrapz(np.flip(((L-W) * np.tan(Sweep05) * y_points - M) * b / (2 * n)))[::-1
-    # Internal torque calculation: first due to the sweep angle then added on due to aerodynamic moment
+
     Ml = []
     Mw =[]
     yp = y_points
@@ -147,13 +109,6 @@ def InternalLoads(L, T, W, D, M, n, y_points, halfspan,sweep):
     Mzm = integrate.cumtrapz(np.flip(M), np.flip(yp))
     Mz = (np.array(Ml) + np.array(Mw) + np.array(Mzm))[::-1]
     Mz = np.append(Mz, [0])
-
-    #plt.plot(halfspan, np.array(Mw)/200)
-    #plt.plot(halfspan, np.array(Ml)/200 )
-    #plt.plot(data['y-span'][:-1], np.array(Ml) + np.array(Mw))
-    # plt.plot(data['y-span'], )
-    #plt.plot(data['y-span'], My)
-    #plt.show()
 
     return Vx, Vy, Mx, My, Mz
 
@@ -191,31 +146,32 @@ def PrelimSizing(Vx, Vy, Mx, My, Mz, chords):
     return Ixx, Iyy, ts, twb
 
 nl = -1 # loadfactor
-CruiseDistribution, TODistribution, y_points = importdat(n)
-Lcruise, Ltakeoff, TC, TTO, W, M_cruise, M_TO, Dcruise, Dtakeoff = forces(CruiseDistribution, TODistribution, y_points, n)
+CruiseDistribution, y_points = importdat(n)
+Lcruise, TC, W, M_cruise, Dcruise = forces(CruiseDistribution, y_points, n)
 Vx, Vy, Mx, My, Mz = InternalLoads(nl*Lcruise, TC, W, abs(nl)*Dcruise, nl*M_cruise, n, y_points, CruiseDistribution['y-span'][-1], Sweep05)
-#plt.plot(y_points, Vy, label='Internal shear force on the y axis, take off')
-Ixx, Iyy, ts, twb = PrelimSizing(Vx, Vy, Mx, My, Mz, CruiseDistribution['Chord'])
+#Ixx, Iyy, ts, twb = PrelimSizing(Vx, Vy, Mx, My, Mz, CruiseDistribution['Chord'])
 
-#print(M_cruise)
-# TestForces(Lcruise, Ltakeoff, Tcruise, W, TODistribution)
+def truss(Force, n, ydistr):
+    truss_nodes = [0, 0.478047892, 0.907639468,1.293686401,1.6406025, 1.952354181,2.23250581,2.48426046, 2.591]#np.linspace(0,ydistr[-1],n)
+    force_nodes = np.interp(truss_nodes, ydistr, Force)
+    force_nodes = force_nodes * (np.pad(truss_nodes, (0, 1), 'constant') - np.pad(truss_nodes, (1, 0), 'constant'))[1:]
+    force_nodes[-1] = Force[-1] * (truss_nodes[-1]-truss_nodes[-2])/2 # holds force on only one side
+    force_nodes[0] = Force[0] * (truss_nodes[1]-truss_nodes[0]) # holds force from 2 sides
+    print(force_nodes)
+    return truss_nodes, force_nodes
 
-#plt.xlabel("z")
-#plt.ylabel("Vy [N]")
-#plt.grid()
-#plt.legend(
-#plt.show()
+ytruss, forcetruss = truss((Lcruise-W)*3.08*1.3, 20, y_points)
 
 def plots():
-    plt.plot(y_points, ts, label='ts')
-    plt.plot(y_points, twb, label='twb')
+    plt.plot(y_points, Mx, label='Lift - Weight')
+    plt.plot(y_points, My, label='Force applied at nodes')
     #plt.plot(y_points, -W, label='Ixx')
     #plt.plot(y_points, Mx, label='Mx')
     #plt.plot(y_points, , label='tot')
     #plt.plot(y_points, My, label='My')
     #plt.plot(y_points, Mz, label='Mz')
-    plt.xlabel("z [m]")
-    plt.ylabel("Ixx [m^4]")
+    plt.xlabel("yb [m]")
+    plt.ylabel("-F_z [N], -w_z [N]")
     plt.grid()
     plt.legend()
     plt.show()

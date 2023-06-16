@@ -98,7 +98,7 @@ class Plane:
             file.write(text)
     
     def record_planform(self):
-        text='S: '+str(self.S)+'\nb: '+str(self.b)+'\nc: '+str(self.c)+'\ntaper: '+str(self.taper)+'\nsweep: '+str(self.sweep)+'\nA: '+str(self.A)+'\nMAC: '+str(self.MAC)+'\nCoordinates x: '+str(self.coords)+'\nCoordinates y: '+str(self.bfull)+'\n\n'
+        text='S: '+str(self.S)+'\nb: '+str(self.b)+'\nc: '+str(self.c)+'\ntaper: '+str(self.taper)+'\nsweep: '+str(self.sweep)+'\nA: '+str(self.A)+'\nMAC: '+str(self.MAC)+'\nCoordinates x: '+str(self.coords)+'\nCoordinates y: '+str(self.bfull)+'\ncg:'+str(self.x_cg)+'\n\n'
         print(text)
         self.add_text_to_file('./Record/Planform record.txt', text)
 
@@ -462,7 +462,7 @@ class Plane:
     #    # self.asd
     #    x=0
 class Tail:
-    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2.5,
+    def __init__(self, plane, eta, SrS, T_engine, l_engine, d_engine, x_cg, taper_v=0.4, A_v=2,
                  thickness_v=0.12, def_rudder_emergency = 15, beta_max=30, Cl_alpha=2*np.pi,
                  sweep_half_v=0, V_stall = 50, density = 1.225, iteration = 1):
         self.A_v=A_v

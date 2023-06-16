@@ -52,9 +52,9 @@ tail.tail_sizing_2()
 
 # Generate x values
 x = np.linspace(-10, 20)
-y = tail.funct_f_b_wt(x)
-plt.plot(x, y)
-plt.show()
+# y = tail.funct_f_b_wt(x)
+# plt.plot(x, y)
+# plt.show()
 
 # Generate y values by applying the function to each x value
 # Create the plot
@@ -63,7 +63,7 @@ LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.
 pushers=True
 
 for i in range(10):
-    Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(38),sweep_outer=np.deg2rad(28))
+    Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(30),sweep_outer=np.deg2rad(28))
     plane=Batterysize.makeplane()
     x_cg_batt=Batterysize.battery_placement()
     plane.x_rect_batt=Batterysize.x_rect_batt
@@ -86,7 +86,7 @@ for i in range(10):
 
     x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
-#tail.tail_dimensions(7)
+tail.tail_dimensions(7)
 
 
 # print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
@@ -94,7 +94,7 @@ for i in range(10):
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
 
 
-plane.plot_plane(True)
+# plane.plot_plane(True)
 
 plane.calculate_MOI(0,0,0)
 
@@ -139,6 +139,8 @@ print(Stability.Routh_discriminant())
 
 
 if record:
+    print(Cs.eta_i)
+    print(LG.track_width_MLG,LG.height_MLG,LG.pos_x_MLG,LG.pos_x_NLG)
     plane.record_planform()
     Stability.record_stability()
     tail.record_tail()

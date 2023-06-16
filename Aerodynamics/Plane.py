@@ -76,7 +76,6 @@ class Plane:
     def plot_plane(self,show=True):
         plt.plot(self.bfull,self.coords,color='black')
         plt.fill(self.bfull,self.coords, color='gray', alpha=0.5)
-        
         Engine=np.array([self.coords_bot[1]-0.3,self.coords_bot[1]+1])
         Engine=np.concatenate((Engine,Engine[::-1],[self.coords_bot[1]-0.3]))
         y_engine=np.array([self.b[1]/2+1.3,self.b[1]/2+1.3,self.b[1]/2-1.3,self.b[1]/2-1.3,self.b[1]/2+1.3])
@@ -91,6 +90,7 @@ class Plane:
         # plt.scatter(self.y_list,self.x_list)
         # plt.plot([0,self.b[-1]/2,self.b[-1]/2,0],[self.x_cr_eq,self.x_ct_eq,self.x_ct_eq+self.ct_eq,self.x_cr_eq+self.cr_eq],color='blue',linestyle='--')
         plt.gca().invert_yaxis()
+        plt.savefig('./Record/Planform.png')
         if show:
             plt.show()
     def add_text_to_file(self,file_path, text):
@@ -98,7 +98,7 @@ class Plane:
             file.write(text)
     
     def record_planform(self):
-        text='S: '+str(self.S)+'\nb: '+str(self.b)+'\nc: '+str(self.c)+'\ntaper: '+str(self.taper)+'\nsweep: '+str(self.sweep)+'\nA: '+str(self.A)+'\nMAC: '+str(self.MAC)+'\n\n'
+        text='S: '+str(self.S)+'\nb: '+str(self.b)+'\nc: '+str(self.c)+'\ntaper: '+str(self.taper)+'\nsweep: '+str(self.sweep)+'\nA: '+str(self.A)+'\nMAC: '+str(self.MAC)+'\nCoordinates x: '+str(self.coords)+'\nCoordinates y: '+str(self.bfull)+'\n\n'
         print(text)
         self.add_text_to_file('./Record/Planform record.txt', text)
 
@@ -306,7 +306,7 @@ class Plane:
         return Area
 
 
-    def calculate_COG(self, pylon_cg, lg_cg, vertical_tail_cg, engine_mass, engine_cg, battery_mass, battery_cg, payload_mass, payload_cg, system_mass, system_cg, MTOW=19900):
+    def calculate_COG(self, pylon_cg, lg_cg, vertical_tail_cg, engine_mass, engine_cg, battery_mass, battery_cg, payload_mass, payload_cg, system_mass, system_cg, MTOW =19900):
         """Steps to determine cog wing structure :
         1. Partition wing into sections with each section having the corresponding c
         2. Estimate x according to sweep (determine offset)
@@ -345,8 +345,8 @@ class Plane:
         
 
         #-----------COG DETERMINATION with all other subsystems------------------------------
-        self.MTOW=MTOW
-        total_structural_mass = 0.26 * MTOW
+        self.MTOW = MTOW
+        total_structural_mass = 0.26 * self.MTOW
 
         #Defining each subsystem
 
@@ -384,7 +384,7 @@ class Plane:
         #COG EQUATION
         x_relative_cg = (body_wing_cg_relative * body_wing_mass + pylon_mass * pylon_cg + lg_mass*lg_cg +
             vertical_tail_mass * vertical_tail_cg + engine_mass*engine_cg + battery_mass * battery_cg +
-            payload_mass*payload_cg + system_mass * system_cg) / (MTOW)
+            payload_mass*payload_cg + system_mass * system_cg) / (self.MTOW)
 
         x_cg = x_relative_cg
 
@@ -471,7 +471,7 @@ class Tail:
         self.density = density
 
 
-        self.eta = eta #How much of the span does the rudder take
+        self.eta = eta
         self.SrS= SrS #Part of surface used for the rudder (Roskam 2 for first iteration)
         self.thickness_v = thickness_v
         self.taper_v = taper_v
@@ -542,12 +542,13 @@ class Tail:
             return 1000, i, "No solution found"
 
     def calc_flap_span_factor(self):
+
         print("Considering that the flap span is {} ?".format(self.eta))
-        self.Kb= 1 #float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
+        self.Kb = 1 #float(input('What is Kb (if you dont know assume 1, Roskam 6 p.260)'))
 
     def calc_delta_cl(self):
         # Calculates the flap chord/ average chord form Sr/S
-        self.cfc = self.SrS / self.eta  # Assumes average chord and sweep of zero
+        self.cfc = self.SrS / (self.eta)  # Assumes average chord and sweep of zero
 
         print("Considering that the cf/c is {} and flap deflection {} deg".format(self.cfc, self.df_deg))
         self.k_theory =1 # float(input('What is k (Roskam 6 - p.228 - fig. 8.13)'))
@@ -626,6 +627,7 @@ class Tail:
             self.x_tail = self.lv+self.x_cg
             self.z_tail = self.zv
             self.A_v = self.A_v
+            self.i = 'Vertical stabiliser on Body section'
             print("Vertical stabiliser on Body section with dy = {} ".format(self.min_dy))
             self.x_v_cg = self.x_tail
 
@@ -634,7 +636,8 @@ class Tail:
             self.b = (self.S_v_wt/self.MAC_wt)
             self.x_tail = self.l_wt + self.x_cg
             self.z_tail = -(self.b)*(self.MAC_wt-cr_t)/(cr_t-self.taper_v*cr_t)
-            self.A_v = self.b**2/self.S_v
+            self.A_v = self.b**2/self.S_v_wt
+            self.i = 'Vertical stabiliser on Wingtips '
             print("Vertical stabiliser on Wingtips, A is {}".format(self.A_v))
 
 ###  --- Vertical stabiliser on wingtips + one vertical stabiliser on the body --- (iteration: 1)
@@ -696,7 +699,7 @@ class Tail:
 
 
         #Body
-        self.A_v_b1 = self.A_v
+        self.A_v_b1 = 3#self.A_v
         self.S_v_b1 = self.newtonRaphson_tail(self.funct_f_b_wt, 9, 0.005, 100, 0.00001, 0.75)[2]  # surface of body
         self.b_v_b1 = np.copy(self.b_v_b)
         self.l_v_b1 = np.copy(self.l_v_b_wt)
@@ -711,6 +714,8 @@ class Tail:
         # print(self.S_v_wt1,self.S_v_b1)
         self.S_v_tot = 2 * self.S_v_wt1+self.S_v_b1  # Surface for both wingtips and body VS
         self.x_tail = (2 * self.S_v_wt1 * self.x_tail_wt1 + self.S_v_b1 * self.x_tail_b1)/(self.S_v_tot)
+
+        self.i = 'Wingtips + one VS on body'
 
     def tail_dimensions(self, S_v):#Tail dimensions in function of tail input
         self.tail_sizing_2()
@@ -733,6 +738,24 @@ class Tail:
         else:
             self.x_v_end=(self.coords_bot[1]-self.coords_bot[0])/(self.b_i)*self.min_dy+self.coords_bot[0]
 
+    def add_text_to_file(self,file_path, text):
+        with open(file_path, 'a') as file:
+            file.write(text)
+    def record_tail(self):
+        if self.iteration==0:
+            text='Config: '+self.i+'\nS_v: '+str(self.S_v)+'\nS_v_1 (For one surface): '+str(self.S_v_wt)+'\nb_v: '+str(self.b)+'\nx_tail (from tip): '+str(self.x_tail)+'\nz_tail (from tip): '+str(self.z_tail)+'\nsweep_half_v: '+str(self.sweep_half_v)+'\nA_v: '+str(self.A_v)+'\n\n'
+        if self.iteration==1:
+            text = 'Config: ' + self.i + '\nS_v_tot: ' + str(self.S_v_tot) + '\n --Wingtips--'+ '\nS_v_wt (For one surface): ' + str(
+                self.S_v_wt1) + '\nb_v_wt: ' + str(self.b_v_wt1) + '\nx_tail (from tip): ' + str(
+                self.x_tail_wt1) + '\nz_tail (from tip): ' + str(self.z_tail_wt1) + '\nsweep_half_v: ' + str(
+                self.sweep_half_v) + '\nA_v: ' + str(self.A_v_wt1) + '\n --Body--'+ '\nS_v_b: ' + str(
+                self.S_v_b1) + '\nb_v_b: ' + str(self.b_v_b1) + '\nx_tail (from tip): ' + str(
+                self.x_tail_b1) + '\nz_tail (from tip): ' + str(self.z_tail_b1) + '\nsweep_half_v: ' + str(
+                self.sweep_half_v) + '\nA_v: ' + str(self.A_v_b1) + '\n\n'
+
+        print(text)
+        self.add_text_to_file('./Record/Tail record.txt', text)
+
 # cog
 # wing Span
 # sweep
@@ -740,7 +763,7 @@ class Tail:
 # Tip chord
 # MAC
 # Dihedral
-# Enginer placement
+# Engine placement
 
 
 

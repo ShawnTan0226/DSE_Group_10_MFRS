@@ -86,7 +86,7 @@ for i in range(10):
 # y = tail.funct_f_b_wt(x)
 # plt.plot(x, y)
 # plt.show()
-tail.tail_dimensions(7)
+tail.tail_dimensions(5)
 
 
 # print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
@@ -98,10 +98,11 @@ LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.
 
 plane.calculate_MOI(0,0,0)
 
-trim=Trim(0.5, 0.02, 0.02,110,4.75)
+trim=Trim(0.317, 0.02, 0.02,110,4.75)
 
-
-
+# plt.plot([LG.pos_x_MLG,plane.coords_bot[1]+1,LG.dis_x_cg_wingtip],[LG.height_MLG,1.3,0])
+# plt.show()
+plane.plot_plane()
 
 
 Coeff=AerodynamicProperties(plane,tail,trim,[[0.025,0.025],[0.025,0.025]])
@@ -124,6 +125,7 @@ if plot_plane_confiig:
     print(tail.cr_v_b,plane.coords_bot[0])
     plt.plot([0,0],[plane.coords_bot[0]-tail.cr_v_b,plane.coords_bot[0]],color="brown",label="tail")
     plt.legend()
+    # print(tail.)
     print('LG height',LG.height_MLG)
     print('x_cg',x_cg)
     plt.show()

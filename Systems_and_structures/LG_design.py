@@ -41,7 +41,7 @@ class LandingGear:
         # Assess the clearance in case of TE pusher engines, most outer engines then critical
         pos_y_engine = self.span / 2
         pos_x_engine = self.xcg + self.dis_x_cg_wingtip
-        prop_radius = 1.25
+        prop_radius = 1.1
         if pusher:
             # Option if wingtip is constraining
             self.height_MLG_tip = np.tan(self.ang_lon) * (self.dis_x_cg_wingtip - self.dis_x_cg_MLG) - np.tan(self.dihedral) * self.span/2

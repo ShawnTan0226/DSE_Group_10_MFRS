@@ -335,7 +335,7 @@ class Plane:
         wing_integration = np.trapz(wing_integrand, chord_y_wing)
 
         #step 3
-        body_wing_cg = (2*body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) + 2 * np.trapz(chord_body_section**2, chord_y_body))
+        body_wing_cg = (body_integration + wing_integration) / (np.trapz(chord_wing_sections**2, chord_y_wing) +  np.trapz(chord_body_section**2, chord_y_body))
         """"----------------wing structure section---------------------"""
 
 

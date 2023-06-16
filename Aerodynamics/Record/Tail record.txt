@@ -1,0 +1,32 @@
+----Start Iteration----
+
+Iteration 0 (Main)
+
+Config: Vertical stabiliser on Wingtips
+S_v: 2.0134954218532592
+S_v_1 (For one surface): 1.0067477109266296
+b_v: 1.713016613565
+x_tail (from tip): 6.6438777977187575
+z_tail (from tip): 0.7341499772421428
+sweep_half_v: 0
+A_v: 2.9147579741192553
+
+Iteration 1 (Main)
+
+Config: Wingtips + one VS on body
+S_v_tot: 4.710294207732052
+ --Wingtips--
+S_v_wt (For one surface): 0.5759212797819843
+b_v_wt: 1.1999179969710267
+x_tail (from tip): 6.732655250440029
+z_tail (from tip): 0.51425057013044
+sweep_half_v: 0
+A_v: 2.5
+ --Body--
+S_v_b: 3.558451648168084
+b_v_b: 0.9181847869466266
+x_tail (from tip): 5.232977202211629
+z_tail (from tip): 0.39350776583426855
+sweep_half_v: 0
+A_v: 3
+

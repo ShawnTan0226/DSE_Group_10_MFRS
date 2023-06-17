@@ -133,9 +133,13 @@ if plot_plane_confiig:
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()
+Stability.halftimes()
+Stability.damping()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
 print('A---',Stability.A_asymm,'\nB---',Stability.B_asymm,'\nC---',Stability.C_asymm,'\nD---',Stability.D_asymm,'\nE---',Stability.E_asymm)
 print(Stability.Routh_discriminant())
+print(Stability.damping_asymm,Stability.damping_symm)
+print(Stability.halftime_symm,Stability.halftime_asymm)
 
 
 if record:

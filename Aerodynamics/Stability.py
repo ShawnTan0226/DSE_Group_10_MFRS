@@ -63,7 +63,29 @@ class Stab:
             file.write(text)
 
     def record_stability(self):
-        text='Symmetric eigenvalues: '+str(self.eigenvalues_symm)+'\nAsymmetric eigenvalues: '+str(self.eigenvalues_asymm)+'\nCoefficients'+str(self.Coeff.coefficients)+'\n\n'
+        text='Symmetric eigenvalues: '+str(self.eigenvalues_symm)+'\nAsymmetric eigenvalues: '+str(self.eigenvalues_asymm)+'\nCoefficients'+str(self.Coeff.coefficients)+'\nHalf time symmetric: '+str(self.halftime_symm)+'\nHalf time asymmetric: '+str(self.halftime_asymm)+'\nDamping symmetric: '+str(self.damping_symm)+'\nDamping asymmetric: '+str(self.damping_asymm)+'\n\n'
         print(text)
         self.add_text_to_file('./Record/Stability record.txt', text)
+
+    def halftimes(self):
+        self.halftime_symm=[]
+        self.halftime_asymm=[]
+        self.damping
+        for i in self.eigenvalues_asymm:
+            self.halftime_asymm.append(np.log(0.5)/i.real*self.plane.MAC/self.V0)
+        for i in self.eigenvalues_symm:
+            self.halftime_symm.append(np.log(0.5)/i.real*self.plane.MAC/self.V0)
+
+    def damping(self):
+        self.damping_asymm=[]
+        self.damping_symm=[]
+        for i in self.eigenvalues_asymm:
+            self.damping_asymm.append(-i.real/np.sqrt(i.real**2+i.imag**2))
+        for i in self.eigenvalues_symm:
+            self.damping_symm.append(-i.real/np.sqrt(i.real**2+i.imag**2))
+
+        
+
+        
+
         

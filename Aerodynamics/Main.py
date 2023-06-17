@@ -138,8 +138,8 @@ Stability.damping()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
 print('A---',Stability.A_asymm,'\nB---',Stability.B_asymm,'\nC---',Stability.C_asymm,'\nD---',Stability.D_asymm,'\nE---',Stability.E_asymm)
 print(Stability.Routh_discriminant())
-print(Stability.damping_asymm,Stability.damping_symm)
-print(Stability.halftime_symm,Stability.halftime_asymm)
+print('damping asymm: ',Stability.damping_asymm,'damping symm',Stability.damping_symm)
+print('halftime asymm: ',Stability.halftime_asymm,'halftime symm',Stability.halftime_symm)
 
 
 if record:

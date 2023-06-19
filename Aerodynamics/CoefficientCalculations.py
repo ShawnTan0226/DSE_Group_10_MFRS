@@ -425,7 +425,7 @@ class AerodynamicProperties:
                         self.z_tail_b * np.cos(self.aoa) - self.l_v_b * np.sin(self.aoa) - self.z_tail_b) / self.b
             self.C_Y_p = 2*C_Y_p_wt+C_Y_p_b
 
-        if self.iteration == 2:
+        if self.iteration == 0:
             self.C_Y_p=2*self.C_Y_b_v*(self.z_v*np.cos(self.aoa)-self.l_v*np.sin(self.aoa)-self.z_v)/self.b
 
         self.coefficients['C_Y_p'] = self.C_Y_p

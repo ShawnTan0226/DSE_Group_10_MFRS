@@ -15,22 +15,22 @@ from BatterySize import Planform_calculation
 import matplotlib.pyplot as plt
 import numpy as np
 
-MTOW=6521
-m_struc=1695.5
-m_eng=400
-m_batprop=1829.21
+MTOW = 5514.97
+m_struc=1378.55
+m_eng=203
+m_batprop=1316.92
 m_payload=2596.51
 m_batt=m_payload+m_batprop
 m_pl=0
 m_system=0
-Wingloading=1412
+Wingloading=1210.377
 V_prop=3
 V_pl=3.5
-Volume=6.5
+Volume=V_prop+V_pl
 
 
 #Tail class inputs
-eta =1
+eta = 1
 SrS =0.36 # based on cessna citation 500 - Roskam
 T_engine = 5600 #[N]
 d_engine = 3 #[m] distance of 1 engine from centerline
@@ -46,46 +46,46 @@ plane=Batterysize.makeplane()
 x_cg=plane.x_quarter
 tail = Tail(plane,eta,SrS,T_engine,l_engine, d_engine,x_cg)
 tail.tail_sizing_2()
-tail.funct_f_b_wt(2.215)
+#tail.funct_f_b_wt(2.215)
 
 # Define the function to plot
 
 # Generate x values
 x = np.linspace(-10, 20)
+# y = tail.funct_f_b_wt(x)
+# plt.plot(x, y)
+# plt.show()
 
 # Generate y values by applying the function to each x value
 # Create the plot
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=True)
 
-pushers=False
+pushers=True
 
 for i in range(10):
-    Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(38),sweep_outer=np.deg2rad(28))
+    Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(30),sweep_outer=np.deg2rad(28))
     plane=Batterysize.makeplane()
     x_cg_batt=Batterysize.battery_placement()
     plane.x_rect_batt=Batterysize.x_rect_batt
     plane.cg_list=Batterysize.cg_list
 
-    x_cg_pylon=0.85*plane.b_tot/2
+    #x_cg_pylon=0.85*plane.b_tot/2
+    #x_cg_payload=0.281*plane.b_tot/2
+    #x_cg_eng=0.85*plane.b_tot/2
+    #x_cg_system=0.281*plane.b_tot/2
+    
+    
+    x_cg_pylon=plane.coords_bot[1]
     x_cg_payload=0.281*plane.b_tot/2
-    x_cg_eng=0.85*plane.b_tot/2
+    x_cg_eng=plane.coords_bot[1]+0.65
     x_cg_system=0.281*plane.b_tot/2
-    
-    
-    # x_cg_pylon=plane.coords_bot[1]
-    # x_cg_payload=0.281*plane.b_tot/2
-    # x_cg_eng=plane.coords_bot[1]+0.65
-    # x_cg_system=0.281*plane.b_tot/2
 
     LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
     tail = Tail(plane,eta,SrS,T_engine,l_engine,d_engine,x_cg)
     tail.tail_sizing_2()
 
-    x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail_wt1,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
+    x_cg=plane.calculate_COG(x_cg_pylon,LG.pos_x_MLG,tail.x_tail,m_eng,x_cg_eng,m_batt,x_cg_batt,m_pl,x_cg_payload,m_system,x_cg_system,MTOW)
 
-# y = tail.funct_f_b_wt(x)
-# plt.plot(x, y)
-# plt.show()
 tail.tail_dimensions(7)
 
 
@@ -94,7 +94,7 @@ tail.tail_dimensions(7)
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)
 
 
-
+# plane.plot_plane(True)
 
 plane.calculate_MOI(0,0,0)
 
@@ -112,6 +112,7 @@ print('dcm----',Cs.dCm_req)
 print(Cs.calc_delta_Cm_outer())
 print(Cs.eta_i)
 print('new_CL_max',Cs.CL_max_new)
+
 
 if plot_plane_confiig:
     if plot_payload_config:
@@ -132,14 +133,22 @@ if plot_plane_confiig:
 Stability=Stab(plane,Coeff,MTOW)
 Stability.get_asymm_eigen()
 Stability.get_symm_eigen()
+Stability.halftimes()
+Stability.damping()
 print(Stability.eigenvalues_symm,Stability.eigenvalues_asymm)
 print('A---',Stability.A_asymm,'\nB---',Stability.B_asymm,'\nC---',Stability.C_asymm,'\nD---',Stability.D_asymm,'\nE---',Stability.E_asymm)
 print(Stability.Routh_discriminant())
+print('damping asymm: ',Stability.damping_asymm,'damping symm',Stability.damping_symm)
+print('halftime asymm: ',Stability.halftime_asymm,'halftime symm',Stability.halftime_symm)
 
 
 if record:
+    print(Cs.eta_i)
+    print(LG.track_width_MLG,LG.height_MLG,LG.pos_x_MLG,LG.pos_x_NLG)
     plane.record_planform()
     Stability.record_stability()
+    tail.record_tail()
+
 '''
 plane=Plane(10,[0.4,0.5],[30, 30],[10,20])
 

@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import integrate
 
-n = 100 # resolution of data along half span
+n = 10 # resolution of data along half span
 
 Sweep05 = np.deg2rad(35.36)
 
 # Weights in the aircraft
 BatteryMass = 1829 + 2596 # kg from 2nd weight estimation
 StructuralMass = 1695 # kg from 2nd weight estimation
-EngineMass = 0# 400 # kg for 7 engines, evenly spread
+EngineMass = 0#400 # kg for 7 engines, evenly spread
 EngineMass = EngineMass / 2
 ThrustTO = 0 # N thrust of one engine at Lift Off
 ThrustCruise = 3011 # N thrust of one engine at cruise
@@ -152,19 +152,21 @@ Vx, Vy, Mx, My, Mz = InternalLoads(nl*Lcruise, TC, W, abs(nl)*Dcruise, nl*M_crui
 #Ixx, Iyy, ts, twb = PrelimSizing(Vx, Vy, Mx, My, Mz, CruiseDistribution['Chord'])
 
 def truss(Force, n, ydistr):
-    truss_nodes = [0, 0.478047892, 0.907639468,1.293686401,1.6406025, 1.952354181,2.23250581,2.48426046, 2.591]#np.linspace(0,ydistr[-1],n)
+    truss_nodes = [0,0.226917131,0.453834262,0.680751393,0.907668524,1.134585655,1.361502786,1.588419917,1.815337048,2.042254179,2.26917131,2.496088441,2.723005572,2.949922703,3.176839834,3.403756965,3.630674096,3.857591227,4.084508358,4.311425489,4.53834262,4.765259751,4.992176882,5.219094013,5.446011144,5.672928275,5.899845406,6.126762537,6.353679668,6.580596799,6.80751393,7.034431061,7.261348192,7.488265323,7.715182454,7.942099585,8.169016716,8.24]
     force_nodes = np.interp(truss_nodes, ydistr, Force)
-    force_nodes = force_nodes * (np.pad(truss_nodes, (0, 1), 'constant') - np.pad(truss_nodes, (1, 0), 'constant'))[1:]
+    len_nodes = (np.pad(truss_nodes, (0, 1), 'constant') - np.pad(truss_nodes, (1, 0), 'constant'))[1:]
+    force_nodes = force_nodes * len_nodes / 4
     force_nodes[-1] = Force[-1] * (truss_nodes[-1]-truss_nodes[-2])/2 # holds force on only one side
     force_nodes[0] = Force[0] * (truss_nodes[1]-truss_nodes[0]) # holds force from 2 sides
-    print(force_nodes)
+    print(repr(force_nodes))
+    plt.scatter(truss_nodes, 1000* len_nodes)
     return truss_nodes, force_nodes
 
-ytruss, forcetruss = truss((Lcruise-W)*3.08*1.3, 20, y_points)
+ytruss, forcetruss = truss(-W * 3.08 *1.3, 20, y_points)
 
 def plots():
-    plt.plot(y_points, Mx, label='Lift - Weight')
-    plt.plot(y_points, My, label='Force applied at nodes')
+    plt.plot(y_points, Lcruise - W, label='Lift - Weight')
+    plt.scatter(ytruss, forcetruss, label='Force applied at nodes')
     #plt.plot(y_points, -W, label='Ixx')
     #plt.plot(y_points, Mx, label='Mx')
     #plt.plot(y_points, , label='tot')
@@ -175,5 +177,6 @@ def plots():
     plt.grid()
     plt.legend()
     plt.show()
+    np.savetxt("output_load_nodes.csv", forcetruss, delimiter=",")
 
 plots()

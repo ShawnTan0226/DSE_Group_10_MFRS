@@ -143,33 +143,33 @@ class Plane:
         if show:
             plt.show()
 
-    def draw_battery_placement(self,opacity,show=True):
+    def draw_battery_placement(self,battery_wing,Body_battery,engine_c,computer_c,other_c,battery_wing_a,Body_battery_a,engine_c_a,computer_c_a,other_c_a,show=True):
 
         frontbox=(self.offset+0.15*self.c)[1:]
-        backbox=(self.offset+0.65*self.c)[1:]
+        backbox=(self.offset+0.55*self.c)[1:]
         x_store=np.concatenate((frontbox,backbox[::-1]))
         y=np.concatenate((self.b[1:]/2,self.b[1:][::-1]/2))
         y_neg=-y
 
         
         Triangle=(self.offset+0.15*self.c)[:-1]
-        Triangle=np.concatenate((Triangle,Triangle[::-1]))
-        y_triangle=np.concatenate((self.b[:-1]/2,-self.b[:-1][::-1]/2))
+        Triangle=np.concatenate((Triangle,[(self.offset+0.15*self.c)[1]+self.x_rect_batt],[(self.offset+0.15*self.c)[1]+self.x_rect_batt],Triangle[::-1]))
+        y_triangle=np.concatenate((self.b[:-1]/2,[self.b[1]/2,-self.b[1]/2],-self.b[:-1][::-1]/2))
 
-        Rectangle=np.concatenate(([(self.offset+0.15*self.c)[1]],[(self.offset+0.15*self.c)[1]+self.x_rect_batt]))
-        Rectangle=np.concatenate((Rectangle,Rectangle[::-1]))
-        y_rect=np.array([self.b[1]/2,self.b[1]/2,-self.b[1]/2,-self.b[1]/2])
+        # Rectangle=np.concatenate(([(self.offset+0.15*self.c)[1]],[(self.offset+0.15*self.c)[1]+self.x_rect_batt]))
+        # Rectangle=np.concatenate((Rectangle,Rectangle[::-1]))
+        # y_rect=np.array([self.b[1]/2,self.b[1]/2,-self.b[1]/2,-self.b[1]/2])
 
         Engine=np.array([self.coords_bot[1]-0.3,self.coords_bot[1]+1])
         Engine=np.concatenate((Engine,Engine[::-1],[self.coords_bot[1]-0.3]))
         y_engine=np.array([self.b[1]/2+1.3,self.b[1]/2+1.3,self.b[1]/2-1.3,self.b[1]/2-1.3,self.b[1]/2+1.3])
 
-        Computer=np.array([(self.offset+0.15*self.c)[1]+self.x_rect_batt,(self.offset+0.65*self.c)[1],(self.offset+0.65*self.c)[0]])
+        Computer=np.array([(self.offset+0.15*self.c)[1]+self.x_rect_batt,(self.offset+0.55*self.c)[1],(self.offset+0.55*self.c)[0]])
         Computer=np.concatenate((Computer,Computer[::-1]))
         y_comp=np.array([self.b[1]/2,self.b[1]/2,0,0,-self.b[1]/2,-self.b[1]/2])
 
         frontbox_red=self.offset+0.15*self.c
-        backbox_red=self.offset+0.65*self.c
+        backbox_red=self.offset+0.55*self.c
         y_red=np.concatenate((self.b/2,self.b[::-1]/2))
         y_red=np.concatenate((y_red,-y_red[::-1]))
         x_red=np.concatenate((self.offset,frontbox_red[::-1]))
@@ -183,15 +183,22 @@ class Plane:
         plt.fill(-y_engine,Engine, color='white',alpha=1,zorder=5)
         plt.plot(y_engine,Engine,color='black',zorder=7)
         plt.plot(-y_engine,Engine,color='black',zorder=7)
-        plt.fill(y_engine,Engine, color='red',alpha=0.6,zorder=6)
-        plt.fill(-y_engine,Engine, color='red',alpha=0.6, label='Engine',zorder=6)
-        plt.fill(y,x_store, color='blue', alpha=opacity)
-        plt.fill(y_neg,x_store, color='blue', alpha=opacity, label='Propulsion Battery')
-        plt.fill(y_triangle,Triangle, color='purple', alpha=opacity, label='propulsion + Battery',linewidth=0)
-        plt.fill(y_comp,Computer, color='green', alpha=opacity, label='Others')
-        plt.fill(y_rect,Rectangle, color='purple', alpha=opacity,linewidth=0)
-        plt.fill(y_red,x_red, color='orange', alpha=opacity)
-        plt.fill(y_red,x_red2, color='orange', alpha=opacity)
+        plt.plot(y,x_store,color='black',zorder=7,linewidth=0.75)
+        plt.plot(y_neg,x_store,color='black',zorder=7,linewidth=0.75)
+        plt.plot(y_triangle,Triangle,color='black',zorder=7,linewidth=0.75)
+        plt.plot(y_comp,Computer,color='black',zorder=7,linewidth=0.75)
+
+
+        plt.fill(y_engine,Engine, color=engine_c,alpha=engine_c_a,zorder=6)
+        plt.fill(-y_engine,Engine, color=engine_c,alpha=engine_c_a, label='Engine',zorder=6)
+        plt.fill(y,x_store, color=battery_wing, alpha=battery_wing_a)
+        plt.fill(y_neg,x_store, color=battery_wing, alpha=battery_wing_a, label='Propulsion Battery')
+        plt.fill(y_triangle,Triangle, color=Body_battery, alpha=Body_battery_a, label='Propulsion + Payload Battery',linewidth=0)
+        plt.fill(y_comp,Computer, color=computer_c, alpha=computer_c_a, label='Others')
+        plt.fill(y_red,x_red, color=other_c, alpha=other_c_a)
+        plt.fill(y_red,x_red2, color=other_c, alpha=other_c_a)
+
+
         plt.legend()
         if show:
             plt.show()

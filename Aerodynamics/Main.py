@@ -113,18 +113,53 @@ print(Cs.calc_delta_Cm_outer())
 print(Cs.eta_i)
 print('new_CL_max',Cs.CL_max_new)
 
+coord_y_cs=np.array([((plane.b[1]+1.3*2)/plane.b[2]+0.05)*plane.b[2]/2,Cs.eta_i*plane.b[2]/2,0.95*plane.b[2]/2])
+chord_cs=2*(plane.c[2]-plane.c[1])/(plane.b[2]-plane.b[1])*(coord_y_cs-plane.b[1]/2)+plane.c[1]
+coord_x_cs=2*(plane.coords_bot[2]-plane.coords_bot[1])/(plane.b[2]-plane.b[1])*(coord_y_cs-plane.b[1]/2)+plane.coords_bot[1]
+coord_top_x_cs=coord_x_cs-chord_cs*0.4
+coord_full_y_cs=np.concatenate((coord_y_cs,coord_y_cs[::-1]))
+coord_full_x_cs=np.concatenate((coord_top_x_cs,coord_x_cs[::-1]))
+
+coord_y_cs_plot=np.copy(coord_y_cs)
+coord_y_cs_plot=np.insert(coord_y_cs_plot,1,coord_y_cs[1])
+coord_y_cs_plot=np.insert(coord_y_cs_plot,1,coord_y_cs[1])
+
+coord_x_cs_plot=np.copy(coord_top_x_cs)
+coord_x_cs_plot=np.insert(coord_x_cs_plot,1,coord_x_cs[1])
+coord_x_cs_plot=np.insert(coord_x_cs_plot,1,coord_top_x_cs[1])
+
+coord_full_y_cs_plot=np.concatenate((coord_y_cs_plot,coord_y_cs[::-1],[coord_y_cs_plot[0]]))
+coord_full_x_cs_plot=np.concatenate((coord_x_cs_plot,coord_x_cs[::-1],[coord_x_cs_plot[0]]))
+
 
 if plot_plane_confiig:
     if plot_payload_config:
-        plane.draw_battery_placement(0.5,False)
+        Wing_batt_color=(0/255, 118/255, 194/255)
+        Wing_batt_a=1
+        Body_batt_color=(0/255, 184/255, 200/255)
+        Body_batt_a=1
+        engine_color=(224/255, 60/255, 49/255)
+        engine_a=1
+        computer_color=(237/255, 104/255, 66/255)
+        computer_a=1
+        other_color=(220/255, 220/255, 220/255)
+        other_a=1
+        plane.draw_battery_placement(Wing_batt_color,Body_batt_color,engine_color,computer_color,other_color,Wing_batt_a,Body_batt_a,engine_a,computer_a,other_a,False)
     else:
         plane.plot_plane(False)
     plt.scatter([-LG.track_width_MLG/2,LG.track_width_MLG/2,0],[LG.pos_x_MLG,LG.pos_x_MLG,LG.pos_x_NLG],color="blue",label="LG",zorder=8)
     plt.scatter([0],[x_cg],color="red",label="CG",zorder=8)
-    plt.scatter([plane.y_quarter],[plane.x_quarter],color="green",label="ac",zorder=8)
+    plt.scatter([plane.y_quarter],[plane.x_quarter],color="black",label="ac",zorder=8)
     print(tail.cr_v_b,plane.coords_bot[0])
     plt.plot([0,0],[plane.coords_bot[0]-tail.cr_v_b,plane.coords_bot[0]],color="brown",label="tail")
+
+    plt.plot(coord_full_y_cs_plot,coord_full_x_cs_plot,color="black",linewidth=0.75)
+    plt.plot(-coord_full_y_cs_plot,coord_full_x_cs_plot,color="black",linewidth=0.75)
+    plt.fill(coord_full_y_cs,coord_full_x_cs,color="orange",label="control surface",alpha=1)
+    plt.fill(-coord_full_y_cs,coord_full_x_cs,color="orange",alpha=1)
+
     plt.legend()
+    plt.axis('equal')
     print('LG height',LG.height_MLG)
     print('x_cg',x_cg)
     plt.show()

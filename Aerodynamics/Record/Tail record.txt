@@ -30,3 +30,39 @@ z_tail (from tip): 0.39350776583426855
 sweep_half_v: 0
 A_v: 3
 
+Config: Wingtips + one VS on body
+S_v_tot: 8.155574000430658
+ --Wingtips--
+S_v_wt (For one surface): 0.5777870002153289
+b_v_wt: 1.0749762790083592
+x_tail (from tip): 6.149285815041732
+z_tail (from tip): 0.46070411957501106
+sweep_half_v: 0
+A_v: 2
+ --Body--
+S_v_b: 7
+b_v_b: 0.6546536707079771
+x_tail (from tip): 5.229293183258595
+z_tail (from tip): 0.28056585887484736
+sweep_half_v: 0
+A_v: 2
+
+
+Iteration 1 final
+Config: Wingtips + one VS on body
+S_v_tot: 8.155574000430658
+ --Wingtips--
+S_v_wt (For one surface): 0.5777870002153289
+b_v_wt: 1.0749762790083592
+x_tail (from tip): 6.149285815041732
+z_tail (from tip): 0.46070411957501106
+sweep_half_v: 0
+A_v: 2
+ --Body--
+S_v_b: 7
+b_v_b: 0.6546536707079771
+x_tail (from tip): 5.229293183258595
+z_tail (from tip): 0.28056585887484736
+sweep_half_v: 0
+A_v: 3
+

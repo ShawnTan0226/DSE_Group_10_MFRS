@@ -26,12 +26,16 @@ class control:
 
 
     def calc_eta_i(self):
-        x=self.newtonRaphson(self.moment_diff,0.5,0.0001,100,0.0001,0.5)[2]
+        x=self.newtonRaphson(self.momentwithHLD,0.5,0.0001,100,0.0001,0.5)[2]
         self.eta_i=x    
-        self.CL_max_new=self.CL_max+self.calc_delta_CL(self.delta,self.eta_i,0.95)
+        self.CL_max_new=self.CL_max+self.calc_delta_CL(self.delta,self.eta_i,0.95)-self.calc_delta_CL(self.delta,(self.plane.b[1]+3)/self.plane.b[2],self.eta_i)
     
     def moment_diff(self,eta_i):
         return self.dCm_req+self.calc_Delta_Cm(eta_i,0.95)
+
+    def momentwithHLD(self,eta_i):
+        MomentHLD=self.calc_Delta_Cm((self.plane.b[1]+1.3*2)/self.plane.b[2]+0.05,eta_i)
+        return self.dCm_req+self.calc_Delta_Cm(eta_i,0.95)-MomentHLD
 
     def calc_Delta_Cm(self,eta_i,eta_o):
         self.Delta_CL_ref=self.calc_delta_CL(self.delta,0,1)

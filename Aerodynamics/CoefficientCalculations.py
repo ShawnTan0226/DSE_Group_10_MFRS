@@ -220,8 +220,8 @@ class AerodynamicProperties:
     def calc_Cmac(self):
 
         print("Considering taper ratios are {}, aspect ratios are {} and quarter chord sweep angle are {} ? (Roskam 6 - p. 304)".format(self.plane.taper, self.plane.A_list, np.rad2deg(self.plane.sweep)))
-        dCmdEps1 = float(input('What is the dCmdEps of the inner section?'))
-        dCmdEps2 = float(input('What is the dCmdEps of the outer section?'))
+        dCmdEps1 = 0#float(input('What is the dCmdEps of the inner section?'))
+        dCmdEps2 = 0#float(input('What is the dCmdEps of the outer section?'))
 
         self.dCmdEps = np.array([dCmdEps1,dCmdEps2])
 

@@ -7,10 +7,10 @@ import matplotlib.colors as clrs
 # SAMUEL DEMIAN
 # ---------------------------------------------------------- #
 # inputs :
-name = 'cvs_test'
-factor = 1
-
-
+#name = 'Trade-off - A'
+name = 'truss2_60'
+#name = 'cvs_test'
+factor = 10
 # ---------------------------------------------------------- #
 
 def ImportCsv(name):
@@ -24,11 +24,9 @@ def ImportCsv(name):
 
     return nodes, disp, truss
 
-
 def CreateDisp(nodes, disp, factor=1):
     deformed_nodes = nodes + (disp * factor)
     return deformed_nodes
-
 
 def GenTruss(node, trusses):
     truss = trusses
@@ -58,8 +56,11 @@ def Graph(truss_graph, deformed_truss_graph):
         length_def = LenTruss(truss_deformed)
         strain = length_def / length_undef
         deformation.append(strain)
-    max_strain = np.amax(deformation)
-    min_strain = np.amin(deformation)
+
+    max_strain = 4.8e+5#np.amax(deformation)
+    min_strain = -3.1e+5 #np.amin(deformation)
+    Emod = 1.04e11
+    stress = Emod * np.array(deformation)
 
 
     # drawing original truss
@@ -67,34 +68,44 @@ def Graph(truss_graph, deformed_truss_graph):
 
         x = i[0]
         y = i[1]
-        plt.plot(x, y, color='grey')
+        plt.plot(x, y, color='black', linewidth=1)
 
     # drawing deformed truss
     for i in range(len(deformed_truss_graph)):
         deformed_truss_i = deformed_truss_graph[i]
 
         strain_i = deformation[i]
-        percentage = (strain_i - min_strain)/(max_strain - min_strain)
+        stress_i = stress[i]
+        # percentage = (strain_i - min_strain)/(max_strain - min_strain)
+        percentage = (stress_i - min_strain) / (max_strain - min_strain)
         perc_color = percentage
-        color_i = (perc_color, 0, 1-perc_color)
+        print(perc_color)
+
+        if perc_color >= max_strain:
+            color_i = 'yellow'
+        elif perc_color <= min_strain:
+            color_i = 'yellow'
+        else:
+            color_i = 'green'#(perc_color, 0, 1-perc_color)
 
         x = deformed_truss_i[0]
         y = deformed_truss_i[1]
 
-        plt.plot(x, y, color=color_i)
+        plt.plot(x, y, color=color_i, linewidth=2)
 
     plt.axis('equal')
+    plt.grid()
+    plt.xlabel('m')
+    plt.ylabel('m')
+    plt.title('Truss, '+ name)
     plt.show()
-
-
-
 
 def main(name, factor):
     nodes, disp, truss_pairs = ImportCsv(name)
+
     nodes_def = CreateDisp(nodes, disp, factor)
     truss_graph = GenTruss(nodes, truss_pairs)
     deformed_truss_graph = GenTruss(nodes_def, truss_pairs)
     Graph(truss_graph, deformed_truss_graph)
-
 
 main(name, factor)

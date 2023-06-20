@@ -62,7 +62,11 @@ LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.
 
 pushers=True
 
-for i in range(10):
+# cg=[]
+# bb=[]
+# x_cg_past=x_cg
+
+for i in range(7):
     Batterysize=Planform_calculation(".\Airfoil_dat\MH 91  14.98%.dat",".\Airfoil_dat\MH 91  14.98%.dat",MTOW,Wingloading,V_prop,V_pl,0.25,LG.track_width_MLG/(plane.b_tot),sweep_inner=np.deg2rad(30),sweep_outer=np.deg2rad(28))
     plane=Batterysize.makeplane()
     x_cg_batt=Batterysize.battery_placement()
@@ -88,7 +92,11 @@ for i in range(10):
 
 tail.tail_dimensions(7)
 
+# plt.plot(bb)
+# plt.ylabel('e')
+# plt.xlabel('iteration')
 
+# plt.show()
 # print('Bruhhhhh',tail.S_v_b1,tail.x_offset_engine,tail.S_v_wt1)
 
 LG=LandingGear(x_cg,plane.b_tot,plane.sweep[0],MTOW,plane.c[1],plane.c[0],plane.MAC,pusher=pushers)

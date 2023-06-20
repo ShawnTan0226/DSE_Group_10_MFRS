@@ -4,7 +4,7 @@
 # Template for graphs:
 fig, ax = plt.subplots()
 
-# Possible colours: 1) blue, 2) red, 3) green, 4) yellow, 5)
+# Possible colours: 1) Light blue: '#0076C2', 2) turqoise: '#00B8C8', 3) dark blue: '#0C2340', 4) Purple: #6F1D77, 5)
 ax.plot(x, y, linestyle='-', label="Label", color='SPECIFY COLOUR!')
 
 ax.set_xlabel('Axis Label')
